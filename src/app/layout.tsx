@@ -4,6 +4,9 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { ProjectProvider } from "@/contexts/ProjectContext";
+import { TaskProvider } from "@/contexts/TaskContext";
+import { WorkPackageProvider } from "@/contexts/WorkpackageContext";
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -31,7 +34,11 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
         <AuthProvider>
           <UserProvider>
-            <ProjectProvider>{children}</ProjectProvider>
+            <ProjectProvider>
+              <WorkPackageProvider>
+                <TaskProvider>{children}</TaskProvider>
+              </WorkPackageProvider>
+            </ProjectProvider>
           </UserProvider>
         </AuthProvider>
       </body>

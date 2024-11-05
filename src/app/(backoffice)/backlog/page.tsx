@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Plus, GripVertical } from "lucide-react";
+import { TaskMatrix } from "@/components/taches/TaskMatrix";
 
 // Types
 interface KanbanItem {
@@ -177,6 +178,14 @@ export default function KanbanBoard() {
               Ajouter une colonne
             </Button>
           </div>
+        </div>
+        {/* Add TaskMatrix below the Kanban board */}
+
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Matrice des Tâches
+          </h2>
+          <TaskMatrix />
         </div>
       </div>
     </div>

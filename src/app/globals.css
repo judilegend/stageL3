@@ -54,6 +54,9 @@
   animation: fadeOut 200ms ease-in;
 }
 
+/* * {
+  overflow-x: hidden;
+} */
 /******animation et style page authentication********/
 
 /* styles/auth.css */
