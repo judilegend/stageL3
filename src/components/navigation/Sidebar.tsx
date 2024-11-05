@@ -92,7 +92,7 @@ export function AppSidebar({ className }: SidebarProps) {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 transition-colors relative group",
                 pathname === item.url
-                  ? "bg-gray-500 text-white"
+                  ? "bg-gray-100 "
                   : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
               )}
             >
@@ -100,7 +100,7 @@ export function AppSidebar({ className }: SidebarProps) {
                 className={cn(
                   "h-5 w-5",
                   pathname === item.url
-                    ? "text-white"
+                    ? "text-gray-500"
                     : "text-gray-500 group-hover:text-gray-900"
                 )}
               />
@@ -108,7 +108,7 @@ export function AppSidebar({ className }: SidebarProps) {
                 className={cn(
                   "font-medium",
                   pathname === item.url
-                    ? "text-white"
+                    ? "text-gray-500"
                     : "text-gray-700 group-hover:text-gray-900"
                 )}
               >
