@@ -1,88 +1,97 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Project, ProjectStatus } from "@/types/project";
 import { useProjects } from "@/contexts/ProjectContext";
 import { projectService } from "@/services/projectService";
-import { ProjectStatus } from "@/types/project";
 
-interface CreateProjectDialogProps {
+interface EditProjectDialogProps {
+  project: Project;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function CreateProjectDialog({
+export default function EditProjectDialog({
+  project,
   isOpen,
   onClose,
-}: CreateProjectDialogProps) {
+}: EditProjectDialogProps) {
   const { dispatch } = useProjects();
-  const router = useRouter();
+
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    clientName: "",
-    clientSurname: "",
-    clientPhone: "",
-    clientEmail: "",
-    requestedBudgetLowwer: "0",
-    requestedBudgetUpper: "0",
-    deadline: new Date().toISOString().split("T")[0],
-    status: "submitted" as ProjectStatus,
-    progress: 0,
+    title: project?.title || "",
+    description: project?.description || "",
+    clientName: project?.clientName || "",
+    clientSurname: project?.clientSurname || "",
+    clientPhone: project?.clientPhone || "",
+    clientEmail: project?.clientEmail || "",
+    requestedBudgetLowwer: project?.requestedBudgetLowwer?.toString() || "0",
+    requestedBudgetUpper: project?.requestedBudgetUpper?.toString() || "0",
+    deadline: project?.deadline
+      ? new Date(project.deadline).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0],
+    status: project?.status || ("submitted" as ProjectStatus),
+    progress: project?.progress || 0,
   });
+
+  useEffect(() => {
+    if (project) {
+      setFormData({
+        title: project.title,
+        description: project.description,
+        clientName: project.clientName,
+        clientSurname: project.clientSurname,
+        clientPhone: project.clientPhone,
+        clientEmail: project.clientEmail,
+        requestedBudgetLowwer: project.requestedBudgetLowwer?.toString(),
+        requestedBudgetUpper: project.requestedBudgetUpper?.toString(),
+        deadline: new Date(project.deadline)?.toISOString().split("T")[0],
+        status: project.status,
+        progress: project.progress,
+      });
+    }
+  }, [project]);
 
   const handleSubmit = async () => {
     try {
-      const newProject = await projectService.createProject({
-        ...formData,
-        requestedBudgetLowwer: parseFloat(formData.requestedBudgetLowwer),
-        requestedBudgetUpper: parseFloat(formData.requestedBudgetUpper),
-        deadline: new Date(formData.deadline),
-        status: "submitted",
-        progress: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const updatedProject = await projectService.updateProject(
+        project.id.toString(),
+        {
+          ...formData,
+          requestedBudgetLowwer: parseFloat(formData.requestedBudgetLowwer),
+          requestedBudgetUpper: parseFloat(formData.requestedBudgetUpper),
+          deadline: new Date(formData.deadline),
+        }
+      );
 
-      dispatch({ type: "ADD_PROJECT", payload: newProject });
-
-      const projects = await projectService.getAllProjects();
-      dispatch({ type: "SET_PROJECTS", payload: projects });
-      router.push("/projets");
-
+      dispatch({ type: "UPDATE_PROJECT", payload: updatedProject });
       onClose();
-
-      setFormData({
-        title: "",
-        description: "",
-        clientName: "",
-        clientSurname: "",
-        clientPhone: "",
-        clientEmail: "",
-        requestedBudgetLowwer: "0",
-        requestedBudgetUpper: "0",
-        deadline: new Date().toISOString().split("T")[0],
-        status: "submitted" as ProjectStatus,
-        progress: 0,
-      });
     } catch (error) {
-      console.error("Error creating project:", error);
+      console.error("Error updating project:", error);
     }
   };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Créer un nouveau projet</DialogTitle>
+          <DialogTitle>Modifier le projet</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
@@ -91,7 +100,7 @@ export default function CreateProjectDialog({
               <Input
                 value={formData.title}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, title: e.target?.value }))
+                  setFormData((prev) => ({ ...prev, title: e.target.value }))
                 }
               />
             </div>
@@ -101,10 +110,7 @@ export default function CreateProjectDialog({
                 type="date"
                 value={formData.deadline}
                 onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    deadline: e.target?.value,
-                  }))
+                  setFormData((prev) => ({ ...prev, deadline: e.target.value }))
                 }
               />
             </div>
@@ -117,7 +123,7 @@ export default function CreateProjectDialog({
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  description: e.target?.value,
+                  description: e.target.value,
                 }))
               }
               rows={4}
@@ -126,13 +132,51 @@ export default function CreateProjectDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
+              <label className="text-sm font-medium">Statut</label>
+              <Select
+                value={formData.status}
+                onValueChange={(value: ProjectStatus) =>
+                  setFormData((prev) => ({ ...prev, status: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="submitted">Soumis</SelectItem>
+                  <SelectItem value="in_review">En révision</SelectItem>
+                  <SelectItem value="approved">Approuvé</SelectItem>
+                  <SelectItem value="rejected">Rejeté</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Progression (%)</label>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                value={formData.progress}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    progress: parseInt(e.target.value),
+                  }))
+                }
+              />
+            </div>
+          </div>
+
+          {/* Client information fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <label className="text-sm font-medium">Nom du client</label>
               <Input
                 value={formData.clientName}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    clientName: e.target?.value,
+                    clientName: e.target.value,
                   }))
                 }
               />
@@ -144,7 +188,7 @@ export default function CreateProjectDialog({
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    clientSurname: e.target?.value,
+                    clientSurname: e.target.value,
                   }))
                 }
               />
@@ -159,7 +203,7 @@ export default function CreateProjectDialog({
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    clientPhone: e.target?.value,
+                    clientPhone: e.target.value,
                   }))
                 }
               />
@@ -172,7 +216,7 @@ export default function CreateProjectDialog({
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    clientEmail: e.target?.value,
+                    clientEmail: e.target.value,
                   }))
                 }
               />
@@ -188,7 +232,7 @@ export default function CreateProjectDialog({
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    requestedBudgetLowwer: e.target?.value,
+                    requestedBudgetLowwer: e.target.value,
                   }))
                 }
               />
@@ -201,14 +245,14 @@ export default function CreateProjectDialog({
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    requestedBudgetUpper: e.target?.value,
+                    requestedBudgetUpper: e.target.value,
                   }))
                 }
               />
             </div>
           </div>
         </div>
-        <Button onClick={handleSubmit}>Créer le projet</Button>
+        <Button onClick={handleSubmit}>Mettre à jour le projet</Button>
       </DialogContent>
     </Dialog>
   );

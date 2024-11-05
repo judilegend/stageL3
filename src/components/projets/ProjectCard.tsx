@@ -9,14 +9,34 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, User } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import {
+  Calendar,
+  DollarSign,
+  User,
+  Pencil,
+  Trash2,
+  MoreVertical,
+} from "lucide-react";
+import { formatDate, formatCurrency } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import EditProjectDialog from "./EditProjectDialog";
+import DeleteProjectDialog from "./DeleteProjectDialog";
 
 interface ProjectCardProps {
   project: Project;
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "submitted":
@@ -39,12 +59,35 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           <CardTitle className="text-xl font-semibold">
             {project.title}
           </CardTitle>
-          <Badge className={getStatusColor(project.status)}>
-            {project.status.charAt(0).toUpperCase() +
-              project.status.slice(1).replace("_", " ")}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge className={getStatusColor(project.status)}>
+              {project.status.charAt(0).toUpperCase() +
+                project.status.slice(1).replace("_", " ")}
+            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Modifier
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Supprimer
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </CardHeader>
+
       <CardContent className="space-y-4">
         <p className="text-gray-600 line-clamp-2">{project.description}</p>
 
@@ -63,21 +106,34 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <DollarSign className="h-4 w-4" />
           <span>
-            Budget: {project.requestedBudgetLowwer} € -{" "}
-            {project.requestedBudgetUpper} €
+            Budget: {formatCurrency(project.requestedBudgetLowwer)} -{" "}
+            {formatCurrency(project.requestedBudgetUpper)}
           </span>
         </div>
 
         <div className="w-full bg-gray-200 rounded-full h-2.5">
           <div
-            className="bg-primary h-2.5 rounded-full"
+            className="bg-primary h-2.5 rounded-full transition-all duration-300"
             style={{ width: `${project.progress}%` }}
           ></div>
         </div>
       </CardContent>
+
       <CardFooter className="text-sm text-gray-500">
         Créé le {formatDate(project.createdAt)}
       </CardFooter>
+
+      <EditProjectDialog
+        project={project}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+      />
+
+      <DeleteProjectDialog
+        projectId={project.id}
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+      />
     </Card>
   );
 }
