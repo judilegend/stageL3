@@ -46,7 +46,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/tasks", tacheRoutes);
 app.use("/api/workpackage", workPackageRoutes);
-app.use("/api/project", projectRoutes);
+app.use("/api/projects", projectRoutes);
 app.use("/api/sprints", sprintRoutes);
 app.use("/api/activite", activiteRoutes);
 app.use("/api/messages", messageRoutes);

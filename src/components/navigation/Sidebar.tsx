@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -15,6 +16,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import CreateProjectDialog from "../projets/CreateProjectDialog";
 
 interface SidebarProps {
   className?: string;
@@ -61,6 +63,7 @@ const menuItems = [
 export function AppSidebar({ className }: SidebarProps) {
   const { user } = useAuth();
   const pathname = usePathname();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const userInitial = user?.username ? user.username[0].toUpperCase() : "U";
 
   return (
@@ -74,6 +77,7 @@ export function AppSidebar({ className }: SidebarProps) {
           <Button
             className="w-full bg-black hover:bg-primary/90 text-white"
             size="lg"
+            onClick={() => setIsCreateModalOpen(true)}
           >
             <PlusCircle className="h-5 w-5 mr-2" />
             Créer un projet
@@ -81,43 +85,40 @@ export function AppSidebar({ className }: SidebarProps) {
         </div>
 
         <nav className="flex-1 space-y-1 px-4 py-2">
-          {menuItems.map((item) => {
-            const isActive = pathname === item.url;
-            return (
-              <Link
-                key={item.title}
-                href={item.url}
+          {menuItems.map((item) => (
+            <Link
+              key={item.title}
+              href={item.url}
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 transition-colors relative group",
+                pathname === item.url
+                  ? "bg-gray-500 text-white"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+              )}
+            >
+              <item.icon
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 transition-colors relative group",
-                  isActive
-                    ? "bg-[#222222] text-white"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  "h-5 w-5",
+                  pathname === item.url
+                    ? "text-white"
+                    : "text-gray-500 group-hover:text-gray-900"
+                )}
+              />
+              <span
+                className={cn(
+                  "font-medium",
+                  pathname === item.url
+                    ? "text-white"
+                    : "text-gray-700 group-hover:text-gray-900"
                 )}
               >
-                <item.icon
-                  className={cn(
-                    "h-5 w-5",
-                    isActive
-                      ? "text-white"
-                      : "text-gray-500 group-hover:text-gray-900"
-                  )}
-                />
-                <span
-                  className={cn(
-                    "font-medium",
-                    isActive
-                      ? "text-white"
-                      : "text-gray-700 group-hover:text-gray-900"
-                  )}
-                >
-                  {item.title}
-                </span>
-                {isActive && (
-                  <span className="absolute inset-y-0 left-0 w-1 bg-white rounded-full" />
-                )}
-              </Link>
-            );
-          })}
+                {item.title}
+              </span>
+              {pathname === item.url && (
+                <span className="absolute inset-y-0 left-0 w-1 bg-white rounded-full" />
+              )}
+            </Link>
+          ))}
         </nav>
 
         <div className="border-t p-4 mt-auto">
@@ -134,6 +135,11 @@ export function AppSidebar({ className }: SidebarProps) {
           </div>
         </div>
       </div>
+
+      <CreateProjectDialog
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </aside>
   );
 }
