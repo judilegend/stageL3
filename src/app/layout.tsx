@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import "@/styles/loading-spinner.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { TaskProvider } from "@/contexts/TaskContext";
 import { WorkPackageProvider } from "@/contexts/WorkpackageContext";
-
+import { ActivityProvider } from "@/contexts/ActivityContext";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -32,11 +34,14 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
+        <LoadingSpinner />
         <AuthProvider>
           <UserProvider>
             <ProjectProvider>
               <WorkPackageProvider>
-                <TaskProvider>{children}</TaskProvider>
+                <ActivityProvider>
+                  <TaskProvider>{children}</TaskProvider>
+                </ActivityProvider>
               </WorkPackageProvider>
             </ProjectProvider>
           </UserProvider>
