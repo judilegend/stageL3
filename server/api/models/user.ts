@@ -8,7 +8,14 @@ class User extends Model {
   public username!: string;
   public email!: string;
   public password!: string;
-  public role!: "user" | "admin" | "client";
+  public role!:
+    | "user"
+    | "admin"
+    | "project_owner"
+    | "lead_developer"
+    | "scrum_master"
+    | "developper"
+    | "tech_lead";
   public is_online!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -44,9 +51,18 @@ User.init(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM("user", "admin", "client"),
+      type: DataTypes.ENUM(
+        "user",
+        "admin",
+        "project_owner",
+        "lead_developer",
+        "scrum_master",
+        "developper",
+        "tech_lead"
+      ),
       defaultValue: "user",
     },
+
     is_online: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
