@@ -54,6 +54,9 @@
   animation: fadeOut 200ms ease-in;
 }
 
+/* * {
+  overflow-x: hidden;
+} */
 /******animation et style page authentication********/
 
 /* styles/auth.css */
@@ -98,52 +101,3 @@
 
 /* background-pattern.css */
 /* Modify the background pattern to use white and black */
-.container-pattern {
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, white, black 30%, rgba(0, 0, 0, 0.226) 0%),
-    radial-gradient(circle at 40px 40px, white, black 30%, rgba(0, 0, 0, 0) 0%),
-    radial-gradient(
-      circle at 600px 200px,
-      white,
-      black 10%,
-      rgba(0, 0, 0, 0) 0%
-    ),
-    radial-gradient(
-      circle at 800px 100px,
-      white,
-      black 10%,
-      rgba(0, 0, 0, 0) 0%
-    ),
-    radial-gradient(
-      circle at 700px 500px,
-      white,
-      black 2%,
-      rgba(0, 0, 0, 0.123) 0%
-    ),
-    radial-gradient(circle at 200px 400px, white, black 1%, rgba(0, 0, 0, 0) 0%),
-    radial-gradient(
-      circle at 300px 700px,
-      white,
-      black 15%,
-      rgba(0, 0, 0, 0) 0%
-    ),
-    radial-gradient(
-      circle at 900px 500px,
-      white,
-      black 20%,
-      rgba(0, 0, 0, 0) 0%
-    ),
-    radial-gradient(
-      circle at 650px 400px,
-      white,
-      black 10%,
-      rgba(0, 0, 0, 0) 0%
-    ),
-    radial-gradient(
-      circle at 600px 600px,
-      white,
-      black 1%,
-      rgba(0, 0, 0, 0.959) 0%
-    );
-}

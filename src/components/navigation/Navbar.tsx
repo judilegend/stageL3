@@ -25,7 +25,7 @@ export default function Navbar({ onMenuClick, isMobileMenuOpen }: NavbarProps) {
   const userInitial = user?.username ? user.username[0].toUpperCase() : "U";
 
   return (
-    <nav className="bg-white border-b mx-4 mt-3 border-gray-200 shadow-md">
+    <nav className="bg-white rounded-lg border-b mx-4 mt-3 border-gray-200 shadow-md">
       <div className="flex justify-between items-center px-4 py-2.5 lg:px-6">
         <div className="flex items-center gap-4">
           <button

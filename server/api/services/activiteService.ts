@@ -1,11 +1,14 @@
 import Activite from "../models/activite";
 
-export const createActivite = async (data: Partial<Activite>) => {
-  return await Activite.create(data);
+export const getActivitesByWorkPackageId = async (workPackageId: number) => {
+  return await Activite.findAll({
+    where: { workPackageId },
+    order: [["createdAt", "DESC"]],
+  });
 };
 
-export const getActivitesByWorkPackageId = async (workPackageId: number) => {
-  return await Activite.findAll({ where: { workPackageId } });
+export const createActivite = async (data: Partial<Activite>) => {
+  return await Activite.create(data);
 };
 
 export const updateActivite = async (id: number, data: Partial<Activite>) => {
