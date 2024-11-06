@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { WorkPackage } from "@/types/workpackage";
+import { Activity } from "@/types/activity";
 import { WorkPackageCard } from "./WorkPackageCard";
 import { WorkPackageModal } from "./WorkPackageModal";
 import { Button } from "@/components/ui/button";
@@ -15,12 +16,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkPackage } from "@/contexts/WorkpackageContext";
+import { useActivity } from "@/contexts/ActivityContext";
 
 interface WorkPackageListProps {
   projectId: string;
+  initialWorkPackages: WorkPackage[];
+  initialActivities: Activity[];
 }
 
-export function WorkPackageList({ projectId }: WorkPackageListProps) {
+export function WorkPackageList({
+  projectId,
+  initialWorkPackages,
+  initialActivities,
+}: WorkPackageListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWorkPackage, setEditingWorkPackage] =
     useState<WorkPackage | null>(null);
@@ -29,10 +37,17 @@ export function WorkPackageList({ projectId }: WorkPackageListProps) {
 
   const { workPackages, fetchWorkPackages, deleteWorkPackage } =
     useWorkPackage();
+  const { activities, fetchActivities } = useActivity();
 
   useEffect(() => {
     fetchWorkPackages(projectId);
   }, [projectId]);
+
+  useEffect(() => {
+    workPackages.forEach((wp) => {
+      fetchActivities(wp.id);
+    });
+  }, [workPackages]);
 
   const handleEdit = (workPackage: WorkPackage) => {
     setEditingWorkPackage(workPackage);
@@ -49,6 +64,12 @@ export function WorkPackageList({ projectId }: WorkPackageListProps) {
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
     }
+  };
+
+  const getActivitiesForWorkPackage = (workPackageId: string) => {
+    return activities.filter(
+      (activity) => activity.workPackageId === workPackageId
+    );
   };
 
   const filteredAndSortedWorkPackages = workPackages
@@ -102,25 +123,17 @@ export function WorkPackageList({ projectId }: WorkPackageListProps) {
         </Button>
       </div>
 
-      {filteredAndSortedWorkPackages.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-500">Aucun work package trouvé</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAndSortedWorkPackages.map((workPackage) => (
-            <WorkPackageCard
-              key={workPackage.id}
-              workPackage={workPackage}
-              onAddActivity={() => {
-                /* Implement activity modal */
-              }}
-              onEdit={() => handleEdit(workPackage)}
-              onDelete={() => handleDelete(workPackage.id)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredAndSortedWorkPackages.map((workPackage) => (
+          <WorkPackageCard
+            key={workPackage.id}
+            workPackage={workPackage}
+            activities={getActivitiesForWorkPackage(workPackage.id)}
+            onEdit={() => handleEdit(workPackage)}
+            onDelete={() => handleDelete(workPackage.id)}
+          />
+        ))}
+      </div>
 
       <WorkPackageModal
         isOpen={isModalOpen}

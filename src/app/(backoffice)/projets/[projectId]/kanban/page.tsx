@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { WorkPackageList } from "@/components/backlog/WorkPackageList";
-import { TaskMatrix } from "@/components/taches/TaskMatrix";
 import { getWorkPackagesByProjectId } from "@/services/workpackage-service";
 
 interface PageProps {
@@ -9,23 +8,21 @@ interface PageProps {
   };
 }
 
-export default function BacklogPage({ params }: PageProps) {
+export default async function BacklogPage({ params }: PageProps) {
+  const projectId = params.projectId;
+  const workPackages = await getWorkPackagesByProjectId(projectId);
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-[1370px] mx-auto">
+    <div className="min-h-screen bg-gray-50 py-6">
+      <div className="max-w-[1400px] mx-auto">
         <div className="space-y-8">
           <Suspense fallback={<div>Chargement des work packages...</div>}>
-            <WorkPackageList projectId={params.projectId} />
+            <WorkPackageList
+              projectId={projectId}
+              initialWorkPackages={workPackages}
+              initialActivities={[]}
+            />
           </Suspense>
-
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Matrice des Tâches
-            </h2>
-            <Suspense fallback={<div>Chargement de la matrice...</div>}>
-              <TaskMatrix />
-            </Suspense>
-          </div>
         </div>
       </div>
     </div>
