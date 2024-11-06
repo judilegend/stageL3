@@ -42,11 +42,11 @@ Activite.hasMany(Tache, {
   onUpdate: "CASCADE",
 });
 // Add this after the existing relationships
-Activite.hasMany(PieceJointe, {
-  foreignKey: "activiteId",
-  as: "pieceJointes",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
+// Activite.hasMany(PieceJointe, {
+//   foreignKey: "activiteId",
+//   as: "pieceJointes",
+//   onDelete: "CASCADE",
+//   onUpdate: "CASCADE",
+// });
 
 export default Activite;

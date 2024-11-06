@@ -48,7 +48,7 @@ app.use("/api/tasks", tacheRoutes);
 app.use("/api/workpackages", workPackageRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/sprints", sprintRoutes);
-app.use("/api/activite", activiteRoutes);
+app.use("/api/activities", activiteRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/pomodoro", pomodoroRoutes);
 app.use("/api/piece-jointes", pieceJointeRoutes);
