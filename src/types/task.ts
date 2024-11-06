@@ -1,22 +1,14 @@
-export type TaskPriority =
-  | "important-urgent"
-  | "important-not-urgent"
-  | "not-important-urgent"
-  | "not-important-not-urgent";
-
-export type TaskStatus = "todo" | "in-progress" | "done";
-
 export interface Task {
-  id: string;
+  id: number;
   title: string;
   description: string;
-  priority:
-    | "important-urgent"
-    | "important-not-urgent"
-    | "not-important-urgent"
-    | "not-important-not-urgent";
-  status: "todo" | "in-progress" | "done";
-  assignee?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  status: "todo" | "in_progress" | "done";
+  activiteId: number;
+  assignedUserId: number | null;
+  estimatedPomodoros: number;
+  completedPomodoros: number;
+  urgency: "urgent" | "not-urgent";
+  importance: "important" | "not-important";
+  createdAt: string;
+  updatedAt: string;
 }

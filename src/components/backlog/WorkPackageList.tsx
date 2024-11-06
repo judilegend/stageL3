@@ -39,7 +39,7 @@ export function WorkPackageList({ projectId }: WorkPackageListProps) {
 
   useEffect(() => {
     fetchWorkPackages(projectId);
-  }, [projectId, fetchWorkPackages]);
+  }, [projectId]);
 
   useEffect(() => {
     workPackages.forEach((wp) => {

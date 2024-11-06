@@ -58,7 +58,7 @@ Tache.init(
     },
     estimatedPomodoros: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       defaultValue: 1,
       validate: {
         min: 1,
@@ -67,7 +67,7 @@ Tache.init(
     },
     completedPomodoros: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       defaultValue: 0,
     },
     urgency: {
