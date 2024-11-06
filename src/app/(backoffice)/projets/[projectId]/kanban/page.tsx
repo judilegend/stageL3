@@ -17,11 +17,7 @@ export default async function BacklogPage({ params }: PageProps) {
       <div className="max-w-[1400px] mx-auto">
         <div className="space-y-8">
           <Suspense fallback={<div>Chargement des work packages...</div>}>
-            <WorkPackageList
-              projectId={projectId}
-              initialWorkPackages={workPackages}
-              initialActivities={[]}
-            />
+            <WorkPackageList projectId={projectId} />
           </Suspense>
         </div>
       </div>

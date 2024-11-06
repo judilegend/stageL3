@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { WorkPackage } from "@/types/workpackage";
-import { Activity } from "@/types/activity";
 import { WorkPackageCard } from "./WorkPackageCard";
 import { WorkPackageModal } from "./WorkPackageModal";
 import { Button } from "@/components/ui/button";
@@ -17,21 +16,20 @@ import {
 } from "@/components/ui/select";
 import { useWorkPackage } from "@/contexts/WorkpackageContext";
 import { useActivity } from "@/contexts/ActivityContext";
+import { DeleteConfirmDialog } from "./DialogConfirmDialog";
 
 interface WorkPackageListProps {
   projectId: string;
-  initialWorkPackages: WorkPackage[];
-  initialActivities: Activity[];
 }
 
-export function WorkPackageList({
-  projectId,
-  initialWorkPackages,
-  initialActivities,
-}: WorkPackageListProps) {
+export function WorkPackageList({ projectId }: WorkPackageListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWorkPackage, setEditingWorkPackage] =
     useState<WorkPackage | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [workPackageToDelete, setWorkPackageToDelete] = useState<string | null>(
+    null
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("recent");
 
@@ -41,28 +39,33 @@ export function WorkPackageList({
 
   useEffect(() => {
     fetchWorkPackages(projectId);
-  }, [projectId]);
+  }, [projectId, fetchWorkPackages]);
 
   useEffect(() => {
     workPackages.forEach((wp) => {
       fetchActivities(wp.id);
     });
   }, [workPackages]);
-
   const handleEdit = (workPackage: WorkPackage) => {
     setEditingWorkPackage(workPackage);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      if (
-        window.confirm("Êtes-vous sûr de vouloir supprimer ce work package ?")
-      ) {
-        await deleteWorkPackage(id);
+  const handleDeleteWorkPackage = (id: string) => {
+    setWorkPackageToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteWorkPackage = async () => {
+    if (workPackageToDelete) {
+      try {
+        await deleteWorkPackage(workPackageToDelete);
+        await fetchWorkPackages(projectId);
+      } catch (error) {
+        console.error("Error deleting work package:", error);
       }
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
+      setDeleteDialogOpen(false);
+      setWorkPackageToDelete(null);
     }
   };
 
@@ -130,10 +133,18 @@ export function WorkPackageList({
             workPackage={workPackage}
             activities={getActivitiesForWorkPackage(workPackage.id)}
             onEdit={() => handleEdit(workPackage)}
-            onDelete={() => handleDelete(workPackage.id)}
+            onDelete={() => handleDeleteWorkPackage(workPackage.id)}
           />
         ))}
       </div>
+
+      <DeleteConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={confirmDeleteWorkPackage}
+        title="Supprimer le Work Package"
+        description="Êtes-vous sûr de vouloir supprimer ce work package ? Cette action supprimera également toutes les activités associées."
+      />
 
       <WorkPackageModal
         isOpen={isModalOpen}
