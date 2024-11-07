@@ -43,7 +43,7 @@ Tache.init(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("todo", "in_progress", "done"),
+      type: DataTypes.ENUM("todo", "in_progress", "review", "done"),
       defaultValue: "todo",
     },
     assignedUserId: {

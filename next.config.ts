@@ -1,3 +1,6 @@
+const nextConfig = {
+  transpilePackages: ["@hello-pangea/dnd"],
+};
 module.exports = {
   images: {
     remotePatterns: [
@@ -14,3 +17,4 @@ module.exports = {
     ],
   },
 };
+module.exports = nextConfig;

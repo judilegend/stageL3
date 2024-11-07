@@ -16,6 +16,20 @@ export const assignTache = async (TacheId: number, userId: number) => {
 export const getTachesBySprintId = async (sprintId: number) => {
   return Tache.findAll({ where: { sprintId } });
 };
+
+export const updateTacheStatus = async (tacheId: number, status: string) => {
+  const validStatuses = ["todo", "in_progress", "review", "done"];
+
+  if (!validStatuses.includes(status)) {
+    throw new Error("Invalid status provided");
+  }
+
+  const tache = await Tache.findByPk(tacheId);
+  if (!tache) throw new Error("Task not found");
+
+  return await tache.update({ status });
+};
+
 // Add these new methods
 export const createTacheForActivite = async (
   activiteId: number,
@@ -33,11 +47,11 @@ export const updateTacheAssignment = async (
   return tache.update({ assignedUserId: userId });
 };
 
-export const updateTacheStatus = async (TacheId: number, status: string) => {
-  const tache = await Tache.findByPk(TacheId);
-  if (!tache) throw new Error("Tache not found");
-  return tache.update({ status });
-};
+// export const updateTacheStatus = async (TacheId: number, status: string) => {
+//   const tache = await Tache.findByPk(TacheId);
+//   if (!tache) throw new Error("Tache not found");
+//   return tache.update({ status });
+// };
 export const getTachesByActiviteId = async (activiteId: number) => {
   return await Tache.findAll({ where: { activiteId } });
 };

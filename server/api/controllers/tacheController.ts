@@ -55,6 +55,21 @@ export const assignTache = async (req: Request, res: Response) => {
   }
 };
 
+export const updateTacheStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const tache = await tacheService.updateTacheStatus(parseInt(id), status);
+
+    res.json(tache);
+  } catch (error) {
+    res.status(400).json({
+      message: "Error updating task status",
+      error: error.message,
+    });
+  }
+};
 export const getTachesByActiviteId = async (req: Request, res: Response) => {
   try {
     const taches = await tacheService.getTachesByActiviteId(
