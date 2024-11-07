@@ -17,18 +17,18 @@ export function ProjectsHeader() {
         </p>
       </div>
 
-      <Button
+      {/* <Button
         onClick={() => setIsCreateModalOpen(true)}
         className="bg-black hover:bg-gray-800"
       >
         <PlusCircle className="mr-2 h-5 w-5" />
         Créer un projet
-      </Button>
-
+      </Button> */}
+      {/* 
       <CreateProjectDialog
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-      />
+      /> */}
     </div>
   );
 }

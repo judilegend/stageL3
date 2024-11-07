@@ -33,7 +33,7 @@ export function TaskCard({ task, users }: TaskCardProps) {
   };
 
   return (
-    <Card className="bg-white shadow-sm">
+    <Card className="bg-white shadow-sm ">
       <CardContent className="p-4">
         <div className="flex justify-between items-start">
           <div className="space-y-2">
@@ -44,10 +44,10 @@ export function TaskCard({ task, users }: TaskCardProps) {
                 {task.importance} / {task.urgency}
               </Badge>
               {assignedUser && (
-                <Avatar className="h-6 w-6">
+                <Avatar className="h-6 w-fit  text-sm">
                   {/* <AvatarImage src={assignedUser.avatar} /> */}
-                  <AvatarFallback>
-                    {assignedUser.username.charAt(0)}
+                  <AvatarFallback className="px-4">
+                    {assignedUser.username}
                   </AvatarFallback>
                 </Avatar>
               )}
@@ -74,7 +74,9 @@ export function TaskCard({ task, users }: TaskCardProps) {
               >
                 Changer le statut
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => deleteTask(task.id)}>
+              <DropdownMenuItem
+                onClick={() => deleteTask(task.id, task.activiteId)}
+              >
                 Supprimer
               </DropdownMenuItem>
             </DropdownMenuContent>

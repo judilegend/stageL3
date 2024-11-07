@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,12 +19,13 @@ import {
 } from "@/components/ui/select";
 import { useUsers } from "@/contexts/UserContext";
 import { useTasks } from "@/contexts/TaskContext";
+import { userService } from "@/services/userService";
 
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   activiteId: number;
-  task?: any; // Replace with proper Task type when available
+  task?: any;
 }
 
 export function TaskModal({
@@ -35,32 +36,54 @@ export function TaskModal({
 }: TaskModalProps) {
   const {
     state: { users },
+    dispatch,
   } = useUsers();
   const { createTask, updateTask } = useTasks();
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const fetchedUsers = await userService.getAllUsers();
+        dispatch({ type: "SET_USERS", payload: fetchedUsers });
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+      }
+    };
+
+    if (isOpen) {
+      loadUsers();
+    }
+  }, [isOpen, dispatch]);
+
   const [formData, setFormData] = useState({
     title: task?.title || "",
     description: task?.description || "",
-    assignedUserId: task?.assignedUserId || "",
+    assignedUserId: task?.assignedUserId?.toString() || "",
     importance: task?.importance || "not-important",
     urgency: task?.urgency || "not-urgent",
-    estimatedPomodoros: task?.estimatedPomodoros || 1, // Add this line with default value 1
+    estimatedPomodoros: task?.estimatedPomodoros || 1,
   });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const taskData = {
+        ...formData,
+        assignedUserId:
+          formData.assignedUserId === "0"
+            ? null
+            : parseInt(formData.assignedUserId),
+      };
+
       if (task) {
-        await updateTask(task.id, { ...formData });
+        await updateTask(task.id, taskData);
       } else {
         await createTask({
-          ...formData,
+          ...taskData,
           activiteId,
           status: "todo",
-          assignedUserId: formData.assignedUserId
-            ? parseInt(formData.assignedUserId)
-            : null,
-          createdAt: "",
-          updatedAt: "",
-          estimatedPomodoros: formData.estimatedPomodoros, // Make sure this is included
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           completedPomodoros: 0,
         });
       }
@@ -112,6 +135,7 @@ export function TaskModal({
                 <SelectValue placeholder="Sélectionner un utilisateur" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="0">Non assigné</SelectItem>
                 {users.map((user) => (
                   <SelectItem key={user.id} value={user.id.toString()}>
                     {user.username}

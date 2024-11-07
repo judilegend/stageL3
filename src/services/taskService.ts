@@ -1,12 +1,14 @@
 import { Task } from "@/types/task";
 
-// const API_URL =process.env.NEXT_PUBLIC_API_URL || "http://192.168.88.87:5000/api";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export const taskService = {
   async getTasks(activiteId: number): Promise<Task[]> {
-    const response = await fetch(`${API_URL}/tasks/${activiteId}`, {
+    const response = await fetch(`${API_URL}/tasks/activity/${activiteId}`, {
       credentials: "include",
+      headers: {
+        "Cache-Control": "no-cache",
+      },
     });
     if (!response.ok) throw new Error("Failed to fetch tasks");
     return response.json();

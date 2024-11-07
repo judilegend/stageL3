@@ -4,16 +4,16 @@ import { taskService } from "@/services/taskService";
 import { Task } from "@/types/task";
 
 type TaskState = {
-  tasks: Task[];
+  tasksByActivity: Record<number, Task[]>;
   loading: boolean;
   error: string | null;
 };
 
 type TaskAction =
-  | { type: "SET_TASKS"; payload: Task[] }
+  | { type: "SET_TASKS"; payload: { tasks: Task[]; activiteId: number } }
   | { type: "ADD_TASK"; payload: Task }
   | { type: "UPDATE_TASK"; payload: Task }
-  | { type: "DELETE_TASK"; payload: number }
+  | { type: "DELETE_TASK"; payload: { taskId: number; activiteId: number } }
   | { type: "SET_LOADING" }
   | { type: "SET_ERROR"; payload: string };
 
@@ -24,7 +24,7 @@ const TaskContext = createContext<
       fetchTasks: (activiteId: number) => Promise<void>;
       createTask: (task: Omit<Task, "id">) => Promise<void>;
       updateTask: (id: number, task: Partial<Task>) => Promise<void>;
-      deleteTask: (id: number) => Promise<void>;
+      deleteTask: (id: number, activiteId: number) => Promise<void>;
       assignTask: (taskId: number, userId: number) => Promise<void>;
     }
   | undefined
@@ -33,21 +33,48 @@ const TaskContext = createContext<
 const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
   switch (action.type) {
     case "SET_TASKS":
-      return { ...state, tasks: action.payload, loading: false };
+      return {
+        ...state,
+        tasksByActivity: {
+          ...state.tasksByActivity,
+          [action.payload.activiteId]: action.payload.tasks,
+        },
+        loading: false,
+      };
     case "ADD_TASK":
-      return { ...state, tasks: [...state.tasks, action.payload] };
+      return {
+        ...state,
+        tasksByActivity: {
+          ...state.tasksByActivity,
+          [action.payload.activiteId]: [
+            ...(state.tasksByActivity[action.payload.activiteId] || []),
+            action.payload,
+          ],
+        },
+      };
     case "UPDATE_TASK":
       return {
         ...state,
-        tasks: state.tasks.map((task) =>
-          task.id === action.payload.id ? action.payload : task
-        ),
+        tasksByActivity: {
+          ...state.tasksByActivity,
+          [action.payload.activiteId]: state.tasksByActivity[
+            action.payload.activiteId
+          ].map((task) =>
+            task.id === action.payload.id ? action.payload : task
+          ),
+        },
       };
     case "DELETE_TASK":
       return {
         ...state,
-        tasks: state.tasks.filter((task) => task.id !== action.payload),
+        tasksByActivity: {
+          ...state.tasksByActivity,
+          [action.payload.activiteId]: (
+            state.tasksByActivity[action.payload.activiteId] || []
+          ).filter((task) => task.id !== action.payload.taskId),
+        },
       };
+
     case "SET_LOADING":
       return { ...state, loading: true };
     case "SET_ERROR":
@@ -59,7 +86,7 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
 
 export function TaskProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(taskReducer, {
-    tasks: [],
+    tasksByActivity: {},
     loading: false,
     error: null,
   });
@@ -67,56 +94,73 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const fetchTasks = async (activiteId: number) => {
     dispatch({ type: "SET_LOADING" });
     try {
-      const data = await taskService.getTasks(activiteId);
-      dispatch({ type: "SET_TASKS", payload: data });
+      const tasks = await taskService.getTasks(activiteId);
+      dispatch({ type: "SET_TASKS", payload: { tasks, activiteId } });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
+      dispatch({
+        type: "SET_ERROR",
+        payload:
+          error instanceof Error ? error.message : "Failed to fetch tasks",
+      });
     }
   };
 
   const createTask = async (task: Omit<Task, "id">) => {
     try {
-      const data = await taskService.createTask(task);
-      dispatch({ type: "ADD_TASK", payload: data });
+      const newTask = await taskService.createTask(task);
+      dispatch({ type: "ADD_TASK", payload: newTask });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
+      dispatch({
+        type: "SET_ERROR",
+        payload:
+          error instanceof Error ? error.message : "Failed to create task",
+      });
     }
   };
 
   const updateTask = async (id: number, task: Partial<Task>) => {
     try {
-      const data = await taskService.updateTask(id, task);
-      dispatch({ type: "UPDATE_TASK", payload: data });
+      const updatedTask = await taskService.updateTask(id, task);
+      dispatch({ type: "UPDATE_TASK", payload: updatedTask });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
+      dispatch({
+        type: "SET_ERROR",
+        payload:
+          error instanceof Error ? error.message : "Failed to update task",
+      });
     }
   };
 
-  const deleteTask = async (id: number) => {
+  const deleteTask = async (id: number, activiteId: number) => {
     try {
       await taskService.deleteTask(id);
-      dispatch({ type: "DELETE_TASK", payload: id });
+      dispatch({
+        type: "DELETE_TASK",
+        payload: { taskId: id, activiteId },
+      });
+      // Then refresh the tasks list with the correct activiteId
+      console.log("activiteId", activiteId);
+      const tasks = await taskService.getTasks(activiteId);
+      dispatch({ type: "SET_TASKS", payload: { tasks, activiteId } });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
+      dispatch({
+        type: "SET_ERROR",
+        payload:
+          error instanceof Error ? error.message : "Failed to delete task",
+      });
     }
   };
 
   const assignTask = async (taskId: number, userId: number) => {
     try {
-      const data = await taskService.assignTask(taskId, userId);
-      dispatch({ type: "UPDATE_TASK", payload: data });
+      const updatedTask = await taskService.assignTask(taskId, userId);
+      dispatch({ type: "UPDATE_TASK", payload: updatedTask });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
+      dispatch({
+        type: "SET_ERROR",
+        payload:
+          error instanceof Error ? error.message : "Failed to assign task",
+      });
     }
   };
 
@@ -139,7 +183,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
 export function useTasks() {
   const context = useContext(TaskContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useTasks must be used within a TaskProvider");
   }
   return context;
