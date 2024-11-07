@@ -1,14 +1,27 @@
 import { Task } from "@/types/task";
+import { User } from "@/types/user";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
+const defaultHeaders = {
+  "Content-Type": "application/json",
+  "Cache-Control": "no-store",
+};
+
 export const taskService = {
+  async getUsers(): Promise<User[]> {
+    const response = await fetch(`${API_URL}/user`, {
+      credentials: "include",
+      headers: defaultHeaders,
+    });
+    if (!response.ok) throw new Error("Failed to fetch users");
+    return response.json();
+  },
+
   async getTasks(activiteId: number): Promise<Task[]> {
     const response = await fetch(`${API_URL}/tasks/activity/${activiteId}`, {
       credentials: "include",
-      headers: {
-        "Cache-Control": "no-cache",
-      },
+      headers: defaultHeaders,
     });
     if (!response.ok) throw new Error("Failed to fetch tasks");
     return response.json();
@@ -19,9 +32,7 @@ export const taskService = {
       `${API_URL}/tasks/activite/${taskData.activiteId}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: defaultHeaders,
         credentials: "include",
         body: JSON.stringify(taskData),
       }
@@ -33,9 +44,7 @@ export const taskService = {
   async updateTask(id: number, taskData: Partial<Task>): Promise<Task> {
     const response = await fetch(`${API_URL}/tasks/${id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: defaultHeaders,
       credentials: "include",
       body: JSON.stringify(taskData),
     });
@@ -47,6 +56,7 @@ export const taskService = {
     const response = await fetch(`${API_URL}/tasks/${id}`, {
       method: "DELETE",
       credentials: "include",
+      headers: defaultHeaders,
     });
     if (!response.ok) throw new Error("Failed to delete task");
   },
@@ -54,9 +64,7 @@ export const taskService = {
   async assignTask(taskId: number, userId: number): Promise<Task> {
     const response = await fetch(`${API_URL}/tasks/${taskId}/assign`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: defaultHeaders,
       credentials: "include",
       body: JSON.stringify({ userId }),
     });

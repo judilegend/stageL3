@@ -1,11 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useTasks } from "@/contexts/TaskContext";
-import { useUsers } from "@/contexts/UserContext";
 import { TaskCard } from "./TaskCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { TaskModal } from "./TaskModal";
+import { Task } from "@/types/task";
 
 interface TaskListProps {
   activiteId: number;
@@ -14,19 +14,41 @@ interface TaskListProps {
 export function TaskList({ activiteId }: TaskListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { state, fetchTasks } = useTasks();
-  const { state: userState } = useUsers();
+  const { tasksByActivity, loading, error } = state;
 
   useEffect(() => {
     fetchTasks(activiteId);
   }, [activiteId]);
 
-  const activityTasks = state.tasksByActivity[activiteId] || [];
+  const activityTasks = tasksByActivity[activiteId] || [];
 
-  const tasksByStatus = {
+  const tasksByStatus: Record<string, Task[]> = {
     todo: activityTasks.filter((task) => task.status === "todo"),
     in_progress: activityTasks.filter((task) => task.status === "in_progress"),
     done: activityTasks.filter((task) => task.status === "done"),
   };
+
+  const statusLabels = {
+    todo: "À faire",
+    in_progress: "En cours",
+    done: "Terminé",
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-600 p-4 text-center">
+        Une erreur est survenue lors du chargement des tâches
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -41,19 +63,26 @@ export function TaskList({ activiteId }: TaskListProps) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 w-full gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {Object.entries(tasksByStatus).map(([status, tasks]) => (
-          <div key={status} className="space-y-4 ">
-            <h4 className="font-medium capitalize">
-              {status.replace("_", " ")}
-              <span className="ml-2 text-sm text-gray-500">
-                ({tasks.length})
-              </span>
-            </h4>
-            <div className="space-y-3  ">
+          <div key={status} className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium text-gray-700">
+                {statusLabels[status as keyof typeof statusLabels]}
+                <span className="ml-2 text-sm text-gray-500">
+                  ({tasks.length})
+                </span>
+              </h4>
+            </div>
+            <div className="space-y-3">
               {tasks.map((task) => (
-                <TaskCard key={task.id} task={task} users={userState.users} />
+                <TaskCard key={task.id} task={task} />
               ))}
+              {tasks.length === 0 && (
+                <div className="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-md">
+                  Aucune tâche dans cette catégorie
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -67,3 +96,5 @@ export function TaskList({ activiteId }: TaskListProps) {
     </div>
   );
 }
+
+export default TaskList;
