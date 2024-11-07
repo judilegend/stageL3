@@ -1,7 +1,9 @@
 import { Activity } from "@/types/activity";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://192.168.88.87:5000/api";
+// const API_URL =
+//   process.env.NEXT_PUBLIC_API_URL || "http://192.168.88.87:5000/api";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export async function getActivitiesByWorkPackageId(
   workPackageId: string

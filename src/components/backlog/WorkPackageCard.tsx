@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { TaskList } from "../taches/TaskList";
 import { MoreVertical, Plus } from "lucide-react";
 import {
   DropdownMenu,
@@ -137,9 +138,12 @@ export function WorkPackageCard({
                       </DropdownMenu>
                     </div>
                   )}
+                  <div className="mt-6 w-full">
+                    <TaskList activiteId={Number(activity.id)} />
+                  </div>
                 </CardContent>
               </Card>
-            ))}
+            ))}{" "}
           </div>
 
           <div className="pt-2">
