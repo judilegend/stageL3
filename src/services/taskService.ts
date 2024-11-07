@@ -71,4 +71,15 @@ export const taskService = {
     if (!response.ok) throw new Error("Failed to assign task");
     return response.json();
   },
+  async getTasksByCategory(): Promise<Record<string, Task[]>> {
+    const response = await fetch(`${API_URL}/tasks/categories`, {
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+    });
+    if (!response.ok) throw new Error("Failed to fetch categorized tasks");
+    return response.json();
+  },
 };

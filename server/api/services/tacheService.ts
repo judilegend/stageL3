@@ -67,3 +67,22 @@ export const deleteTache = async (id: number) => {
   if (!tache) throw new Error("Tache not found");
   await tache.destroy();
 };
+export const getTasksByCategory = async () => {
+  const tasks = await Tache.findAll();
+
+  return {
+    importantUrgent: tasks.filter(
+      (task) => task.importance === "important" && task.urgency === "urgent"
+    ),
+    importantNotUrgent: tasks.filter(
+      (task) => task.importance === "important" && task.urgency === "not-urgent"
+    ),
+    notImportantUrgent: tasks.filter(
+      (task) => task.importance === "not-important" && task.urgency === "urgent"
+    ),
+    notImportantNotUrgent: tasks.filter(
+      (task) =>
+        task.importance === "not-important" && task.urgency === "not-urgent"
+    ),
+  };
+};

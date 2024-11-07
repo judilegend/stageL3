@@ -82,6 +82,17 @@ export const getTachesByActiviteId = async (req: Request, res: Response) => {
       .json({ message: "Error fetching taches", error: error.message });
   }
 };
+export const getTasksByCategory = async (req: Request, res: Response) => {
+  try {
+    const categorizedTasks = await tacheService.getTasksByCategory();
+    res.json(categorizedTasks);
+  } catch (error) {
+    res.status(400).json({
+      message: "Error fetching categorized tasks",
+      error: error.message,
+    });
+  }
+};
 
 export const updateTache = async (req: Request, res: Response) => {
   try {

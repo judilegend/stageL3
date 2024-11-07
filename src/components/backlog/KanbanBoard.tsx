@@ -10,8 +10,18 @@ const columns = {
   done: { title: "Terminé", color: "border-green-500" },
 };
 
-export function KanbanBoard({ tasks, onUpdateTask }) {
-  const handleDragEnd = (result) => {
+export function KanbanBoard({
+  tasks,
+  onUpdateTask,
+}: {
+  tasks: Task[];
+  onUpdateTask: (id: number, update: { status: string }) => void;
+}) {
+  const handleDragEnd = (result: {
+    destination: any;
+    source?: any;
+    draggableId?: any;
+  }) => {
     if (!result.destination) return;
 
     const { source, destination, draggableId } = result;
@@ -23,7 +33,7 @@ export function KanbanBoard({ tasks, onUpdateTask }) {
   const organizedTasks = Object.keys(columns).reduce((acc, status) => {
     acc[status] = tasks.filter((task) => task.status === status);
     return acc;
-  }, {});
+  }, {} as Record<string, Task[]>);
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
