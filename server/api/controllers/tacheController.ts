@@ -93,6 +93,17 @@ export const getTasksByCategory = async (req: Request, res: Response) => {
     });
   }
 };
+export const getAvailableTasks = async (req: Request, res: Response) => {
+  try {
+    const tasks = await tacheService.getAvailableTasks();
+    res.json(tasks);
+  } catch (error) {
+    res.status(400).json({
+      message: "Error fetching available tasks",
+      error: error.message,
+    });
+  }
+};
 
 export const updateTache = async (req: Request, res: Response) => {
   try {

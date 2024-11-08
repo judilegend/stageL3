@@ -26,10 +26,16 @@ Tache.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    sprintId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
+    // sprintId: {
+    //   type: DataTypes.INTEGER.UNSIGNED,
+    //   allowNull: true,
+    //   references: {
+    //     model: Sprint,
+    //     key: "id",
+    //   },
+    //   onUpdate: "CASCADE",
+    //   onDelete: "SET NULL",
+    // },
     activiteId: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -86,6 +92,7 @@ Tache.init(
     modelName: "Tache",
   }
 );
+
 Tache.hasMany(Pomodoro, {
   foreignKey: "tacheId",
   as: "pomodoros",

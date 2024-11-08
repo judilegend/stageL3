@@ -17,5 +17,6 @@ router.put("/:id/assign", tacheController.assignTache);
 router.get("/activity/:activiteId", tacheController.getTachesByActiviteId);
 router.put("/:id/status", tacheController.updateTacheStatus);
 router.get("/categories", tacheController.getTasksByCategory);
+router.get("/available", tacheController.getAvailableTasks);
 
 export default router;

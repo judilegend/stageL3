@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import Tache from "../models/tache";
 import User from "../models/user";
 export const createTache = async (TacheData: Partial<Tache>) => {
@@ -85,4 +86,19 @@ export const getTasksByCategory = async () => {
         task.importance === "not-important" && task.urgency === "not-urgent"
     ),
   };
+};
+export const getAvailableTasks = async () => {
+  return Tache.findAll({
+    where: {
+      status: {
+        [Op.notIn]: ["done"],
+      },
+      sprintId: null,
+    },
+    order: [
+      ["urgency", "DESC"],
+      ["importance", "DESC"],
+      ["createdAt", "ASC"],
+    ],
+  });
 };

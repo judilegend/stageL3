@@ -97,14 +97,22 @@ export const TaskCard = memo(function TaskCard({ task }: TaskCardProps) {
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={handleStatusChange}>
+                {task.status === "todo"
+                  ? "traiter"
+                  : task.status === "in_progress"
+                  ? "Marquer à tester"
+                  : "Marquer à faire"}
+              </DropdownMenuItem>
+              {/* <DropdownMenuItem onClick={handleStatusChange}>
                 {task.status === "todo"
                   ? "Marquer en cours"
                   : task.status === "in_progress"
                   ? "Marquer terminé"
                   : "Marquer à faire"}
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuItem
                 onClick={handleDelete}
                 className="text-red-600 focus:text-red-600 focus:bg-red-50"

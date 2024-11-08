@@ -82,4 +82,15 @@ export const taskService = {
     if (!response.ok) throw new Error("Failed to fetch categorized tasks");
     return response.json();
   },
+  async getAvailableTasks(): Promise<Task[]> {
+    const response = await fetch(`${API_URL}/tasks/available`, {
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+    });
+    if (!response.ok) throw new Error("Failed to fetch available tasks");
+    return response.json();
+  },
 };
