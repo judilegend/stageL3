@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Sprint, SprintInput } from "@/types";
 import { sprintService } from "@/services/sprintService";
+import { useCurrentProject } from "./CurrentProjectContext";
 
 interface Filters {
   search: string;
@@ -32,14 +33,17 @@ export function SprintProvider({ children }: { children: React.ReactNode }) {
     search: "",
     status: "all",
   });
+  const { currentProject } = useCurrentProject();
 
   useEffect(() => {
-    fetchSprints();
-  }, []);
+    if (currentProject) {
+      fetchSprints(currentProject.id);
+    }
+  }, [currentProject]);
 
-  const fetchSprints = async () => {
+  const fetchSprints = async (projectId: number) => {
     try {
-      const data = await sprintService.getAllSprints();
+      const data = await sprintService.getSprintsByProject(projectId);
       setSprints(data);
     } catch (err) {
       setError("Failed to fetch sprints");

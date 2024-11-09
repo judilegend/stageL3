@@ -5,6 +5,7 @@ export interface Task {
   status: "todo" | "in_progress" | "review" | "done";
   activiteId: number;
   sprintId: number | null; // Add this line
+  projectId: number | null; // Add this line
   assignedUserId: number | null;
   estimatedPomodoros: number;
   completedPomodoros: number;

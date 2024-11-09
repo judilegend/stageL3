@@ -9,6 +9,7 @@ import {
 import { taskService } from "@/services/taskService";
 import { Task } from "@/types/task";
 import { User } from "@/types/user";
+import { useCurrentProject } from "./CurrentProjectContext";
 
 type TaskState = {
   tasksByActivity: Record<number, Task[]>;
@@ -133,6 +134,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     loading: false,
     error: null,
   });
+  const { currentProject } = useCurrentProject();
 
   useEffect(() => {
     const initializeUsers = async () => {

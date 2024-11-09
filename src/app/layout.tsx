@@ -9,6 +9,7 @@ import { ProjectProvider } from "@/contexts/ProjectContext";
 import { TaskProvider } from "@/contexts/TaskContext";
 import { WorkPackageProvider } from "@/contexts/WorkpackageContext";
 import { ActivityProvider } from "@/contexts/ActivityContext";
+import { CurrentProjectProvider } from "@/contexts/CurrentProjectContext";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -37,13 +38,15 @@ export default function RootLayout({
         <LoadingSpinner />
         <AuthProvider>
           <UserProvider>
-            <ProjectProvider>
-              <WorkPackageProvider>
-                <ActivityProvider>
-                  <TaskProvider>{children}</TaskProvider>
-                </ActivityProvider>
-              </WorkPackageProvider>
-            </ProjectProvider>
+            <CurrentProjectProvider>
+              <ProjectProvider>
+                <WorkPackageProvider>
+                  <ActivityProvider>
+                    <TaskProvider>{children}</TaskProvider>
+                  </ActivityProvider>
+                </WorkPackageProvider>
+              </ProjectProvider>
+            </CurrentProjectProvider>
           </UserProvider>
         </AuthProvider>
       </body>

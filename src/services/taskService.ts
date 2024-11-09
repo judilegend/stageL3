@@ -93,4 +93,12 @@ export const taskService = {
     if (!response.ok) throw new Error("Failed to fetch available tasks");
     return response.json();
   },
+  async getTasksByProject(projectId: number): Promise<Task[]> {
+    const response = await fetch(`${API_URL}/tasks/project/${projectId}`, {
+      credentials: "include",
+      headers: defaultHeaders,
+    });
+    if (!response.ok) throw new Error("Failed to fetch project tasks");
+    return response.json();
+  },
 };

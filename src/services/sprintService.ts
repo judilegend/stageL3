@@ -38,4 +38,8 @@ export const sprintService = {
     const { data } = await axios.get(`${API_URL}/${sprintId}/tasks`);
     return data;
   },
+  async getSprintsByProject(projectId: number): Promise<Sprint[]> {
+    const { data } = await axios.get(`${API_URL}/project/${projectId}/sprints`);
+    return data;
+  },
 };

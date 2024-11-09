@@ -27,9 +27,9 @@ export default function SprintsPage() {
 
         <Tabs defaultValue="active" className="mt-6">
           <TabsList>
+            <TabsTrigger value="planned">Planned Sprints</TabsTrigger>
             <TabsTrigger value="active">Active Sprints</TabsTrigger>
             <TabsTrigger value="completed">Completed Sprints</TabsTrigger>
-            <TabsTrigger value="planned">Planned Sprints</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active">

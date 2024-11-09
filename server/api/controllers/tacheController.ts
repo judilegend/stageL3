@@ -12,6 +12,20 @@ export const createTache = async (req: Request, res: Response) => {
       .json({ message: "Error creating tache", error: error.message });
   }
 };
+// Ajouter ce nouveau contrôleur
+export const getTachesByProjectId = async (req: Request, res: Response) => {
+  try {
+    const { projectId } = req.params;
+    const taches = await tacheService.getTachesByProjectId(parseInt(projectId));
+    res.json(taches);
+  } catch (error) {
+    res.status(400).json({
+      message: "Error fetching project tasks",
+      error: error.message,
+    });
+  }
+};
+
 export const getTachesBySprintId = async (req: Request, res: Response) => {
   try {
     const { sprintId } = req.params;

@@ -102,3 +102,18 @@ export const getAvailableTasks = async () => {
     ],
   });
 };
+// Ajouter cette nouvelle fonction
+export const getTachesByProjectId = async (projectId: number) => {
+  return await Tache.findAll({
+    where: { projectId },
+    include: [
+      {
+        model: User,
+        as: "assignedUser",
+        attributes: ["id", "username", "email"],
+        required: false, // Rend la jointure LEFT JOIN au lieu de INNER JOIN
+      },
+    ],
+    order: [["createdAt", "DESC"]],
+  });
+};
