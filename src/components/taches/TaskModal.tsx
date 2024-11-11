@@ -85,6 +85,7 @@ export function TaskModal({
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           completedPomodoros: 0,
+          sprintId: null,
         });
       }
       onClose();

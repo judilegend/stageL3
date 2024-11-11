@@ -3,6 +3,7 @@ import {
   createProject,
   deleteProject,
   getAllProjects,
+  getProjectById, // Ajout de l'import
   updateProject,
 } from "../controllers/projectController";
 import {
@@ -16,6 +17,7 @@ const router = express.Router();
 // router.get("/", authenticate, authorizeAdmin, getAllProjects);
 // router.put("/:id", authenticate, authorizeAdmin, updateProject);
 // router.delete("/:id", authenticate, authorizeAdmin, deleteProject);
+router.get("/:id", getProjectById); // Ajout de la route manquante
 
 router.post("/", createProject);
 router.get("/", getAllProjects);

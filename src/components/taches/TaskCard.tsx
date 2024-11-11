@@ -1,7 +1,7 @@
 import { useEffect, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MoreVertical } from "lucide-react";
+import { Clock, MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,14 +97,22 @@ export const TaskCard = memo(function TaskCard({ task }: TaskCardProps) {
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={handleStatusChange}>
+                {task.status === "todo"
+                  ? "traiter"
+                  : task.status === "in_progress"
+                  ? "Marquer à tester"
+                  : "Marquer à faire"}
+              </DropdownMenuItem>
+              {/* <DropdownMenuItem onClick={handleStatusChange}>
                 {task.status === "todo"
                   ? "Marquer en cours"
                   : task.status === "in_progress"
                   ? "Marquer terminé"
                   : "Marquer à faire"}
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuItem
                 onClick={handleDelete}
                 className="text-red-600 focus:text-red-600 focus:bg-red-50"
@@ -115,6 +123,14 @@ export const TaskCard = memo(function TaskCard({ task }: TaskCardProps) {
           </DropdownMenu>
         </div>
       </CardContent>
+      <div className="mt-2 px-5 py-1">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Clock className="h-4 w-4" />
+          <span>
+            {task.completedPomodoros}/{task.estimatedPomodoros} pomodoros
+          </span>
+        </div>
+      </div>
     </Card>
   );
 });

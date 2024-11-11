@@ -1,122 +1,91 @@
 import { Request, Response } from "express";
-import * as sprintService from "../services/sprintService";
+import SprintService from "../services/sprintService";
 
-export const createSprint = async (req: Request, res: Response) => {
-  try {
-    const sprint = await sprintService.createSprint(req.body);
-    res.status(201).json(sprint);
-  } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error creating sprint", error: error.message });
+class SprintController {
+  async createSprint(req: Request, res: Response) {
+    try {
+      const sprint = await SprintService.createSprint(req.body);
+      res.status(201).json(sprint);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
   }
-};
 
-export const getSprintsByProjectId = async (req: Request, res: Response) => {
-  try {
-    const { projectId } = req.params;
-    const sprints = await sprintService.getSprintsByProjectId(
-      parseInt(projectId)
-    );
-    res.json(sprints);
-  } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error fetching sprints", error: error.message });
+  async getAllSprints(req: Request, res: Response) {
+    try {
+      const sprints = await SprintService.getAllSprints();
+      res.json(sprints);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
   }
-};
 
-export const updateSprint = async (req: Request, res: Response) => {
-  try {
-    const { sprintId } = req.params;
-    const sprint = await sprintService.updateSprint(
-      parseInt(sprintId),
-      req.body
-    );
-    res.json(sprint);
-  } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error updating sprint", error: error.message });
+  async getSprintById(req: Request, res: Response) {
+    try {
+      const sprint = await SprintService.getSprintById(Number(req.params.id));
+      if (!sprint) {
+        return res.status(404).json({ message: "Sprint not found" });
+      }
+      res.json(sprint);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
   }
-};
 
-export const deleteSprint = async (req: Request, res: Response) => {
-  try {
-    const { sprintId } = req.params;
-    await sprintService.deleteSprint(parseInt(sprintId));
-    res.json({ message: "Sprint deleted successfully" });
-  } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error deleting sprint", error: error.message });
+  async updateSprint(req: Request, res: Response) {
+    try {
+      const sprint = await SprintService.updateSprint(
+        Number(req.params.id),
+        req.body
+      );
+      res.json(sprint);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
   }
-};
 
-export const addTaskToSprint = async (req: Request, res: Response) => {
-  try {
-    const { sprintId, taskId } = req.params;
-    await sprintService.addTaskToSprint(parseInt(sprintId), parseInt(taskId));
-    res.json({ message: "Task added to sprint successfully" });
-  } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error adding task to sprint", error: error.message });
+  async deleteSprint(req: Request, res: Response) {
+    try {
+      await SprintService.deleteSprint(Number(req.params.id));
+      res.json({ message: "Sprint deleted successfully" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
   }
-};
 
-export const removeTaskFromSprint = async (req: Request, res: Response) => {
-  try {
-    const { taskId } = req.params;
-    await sprintService.removeTaskFromSprint(parseInt(taskId));
-    res.json({ message: "Task removed from sprint successfully" });
-  } catch (error) {
-    res.status(400).json({
-      message: "Error removing task from sprint",
-      error: error.message,
-    });
+  async addTaskToSprint(req: Request, res: Response) {
+    try {
+      const { taskId } = req.body;
+      const sprintId = Number(req.params.id);
+      const task = await SprintService.addTaskToSprint(sprintId, taskId);
+      await SprintService.updateSprintProgress(sprintId);
+      res.json(task);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
   }
-};
 
-export const updateSprintProgress = async (req: Request, res: Response) => {
-  try {
-    const { sprintId } = req.params;
-    const sprint = await sprintService.updateSprintProgress(parseInt(sprintId));
-    res.json(sprint);
-  } catch (error) {
-    res.status(400).json({
-      message: "Error updating sprint progress",
-      error: error.message,
-    });
+  async getSprintProgress(req: Request, res: Response) {
+    try {
+      const sprint = await SprintService.updateSprintProgress(
+        Number(req.params.id)
+      );
+      res.json(sprint);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
   }
-};
 
-export const generateSprintReport = async (req: Request, res: Response) => {
-  try {
-    const { sprintId } = req.params;
-    const report = await sprintService.generateSprintReport(parseInt(sprintId));
-    res.json(report);
-  } catch (error) {
-    res.status(400).json({
-      message: "Error generating sprint report",
-      error: error.message,
-    });
+  async getActiveSprintTasks(req: Request, res: Response) {
+    try {
+      const tasks = await SprintService.getActiveSprintTasks(
+        Number(req.params.id)
+      );
+      res.json(tasks);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
   }
-};
+}
 
-export const getActiveSprintsForProject = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    const { projectId } = req.params;
-    const sprints = await sprintService.getActiveSprintsForProject(
-      parseInt(projectId)
-    );
-    res.json(sprints);
-  } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error fetching active sprints", error: error.message });
-  }
-};
+export default new SprintController();

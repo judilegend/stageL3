@@ -15,7 +15,12 @@ export function TaskList({ activiteId }: TaskListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { state, fetchTasks } = useTasks();
   const { tasksByActivity, loading, error } = state;
+  const { fetchProjectTasks } = useTasks();
+  const { projectTasks } = state;
 
+  // useEffect(() => {
+  //   fetchProjectTasks();
+  // }, []);
   useEffect(() => {
     fetchTasks(activiteId);
   }, [activiteId]);

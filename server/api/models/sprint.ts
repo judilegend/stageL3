@@ -1,18 +1,16 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
-import Task from "./tache";
 import Tache from "./tache";
 
 class Sprint extends Model {
   public id!: number;
-  public projectId!: number;
   public name!: string;
   public startDate!: Date;
   public endDate!: Date;
   public goal!: string;
   public progress!: number;
   public status!: "planned" | "in_progress" | "completed";
-  public Tasks!: Task[];
+  public tasks?: Tache[];
 }
 
 Sprint.init(
@@ -21,10 +19,6 @@ Sprint.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-    },
-    projectId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
     },
     name: {
       type: DataTypes.STRING,
@@ -48,7 +42,7 @@ Sprint.init(
       defaultValue: 0,
     },
     status: {
-      type: DataTypes.ENUM("planned", "in_progress", "completed"),
+      type: DataTypes.ENUM("planned", "in_progress", "in_review", "completed"),
       allowNull: false,
       defaultValue: "planned",
     },
@@ -56,15 +50,17 @@ Sprint.init(
   {
     sequelize,
     modelName: "Sprint",
+    tableName: "sprints",
   }
 );
-Sprint.hasMany(Tache, {
-  foreignKey: "sprintId",
-  as: "Taches",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-// Sprint.hasMany(Task, { foreignKey: "sprintId", as: "Tasks" });
-// Task.belongsTo(Sprint, { foreignKey: "sprintId" });
+
+const defineAssociations = () => {
+  Sprint.hasMany(Tache, {
+    foreignKey: "sprintId",
+    as: "tasks",
+  });
+};
+
+setTimeout(defineAssociations, 0);
 
 export default Sprint;

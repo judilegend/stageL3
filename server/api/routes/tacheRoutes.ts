@@ -15,5 +15,10 @@ router.get("/sprint/:sprintId", tacheController.getTachesBySprintId);
 router.post("/activite/:activiteId", tacheController.createTacheForActivite);
 router.put("/:id/assign", tacheController.assignTache);
 router.get("/activity/:activiteId", tacheController.getTachesByActiviteId);
+router.put("/:id/status", tacheController.updateTacheStatus);
+router.get("/categories", tacheController.getTasksByCategory);
+router.get("/available", tacheController.getAvailableTasks);
+router.get("/project/:projectId", tacheController.getTachesByProjectId);
+router.get("/all", tacheController.getAllTaches);
 
 export default router;

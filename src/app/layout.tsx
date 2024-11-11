@@ -9,6 +9,8 @@ import { ProjectProvider } from "@/contexts/ProjectContext";
 import { TaskProvider } from "@/contexts/TaskContext";
 import { WorkPackageProvider } from "@/contexts/WorkpackageContext";
 import { ActivityProvider } from "@/contexts/ActivityContext";
+import { CurrentProjectProvider } from "@/contexts/CurrentProjectContext";
+import { SprintProvider } from "@/contexts/SprintContext";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -25,7 +27,6 @@ export const metadata: Metadata = {
   title: "DepannPC - Plateforme de Gestion",
   description: "Plateforme de gestion pour l'équipe DepannPC",
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,13 +38,15 @@ export default function RootLayout({
         <LoadingSpinner />
         <AuthProvider>
           <UserProvider>
-            <ProjectProvider>
-              <WorkPackageProvider>
-                <ActivityProvider>
-                  <TaskProvider>{children}</TaskProvider>
-                </ActivityProvider>
-              </WorkPackageProvider>
-            </ProjectProvider>
+            <CurrentProjectProvider>
+              <ProjectProvider>
+                <WorkPackageProvider>
+                  <ActivityProvider>
+                    <TaskProvider>{children}</TaskProvider>
+                  </ActivityProvider>
+                </WorkPackageProvider>
+              </ProjectProvider>
+            </CurrentProjectProvider>
           </UserProvider>
         </AuthProvider>
       </body>

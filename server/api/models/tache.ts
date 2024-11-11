@@ -26,10 +26,7 @@ Tache.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    sprintId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
+
     activiteId: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -43,7 +40,7 @@ Tache.init(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("todo", "in_progress", "done"),
+      type: DataTypes.ENUM("todo", "in_progress", "review", "done"),
       defaultValue: "todo",
     },
     assignedUserId: {
@@ -51,6 +48,16 @@ Tache.init(
       allowNull: true,
       references: {
         model: User,
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
+    },
+    sprintId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: Sprint,
         key: "id",
       },
       onUpdate: "CASCADE",
@@ -86,6 +93,7 @@ Tache.init(
     modelName: "Tache",
   }
 );
+
 Tache.hasMany(Pomodoro, {
   foreignKey: "tacheId",
   as: "pomodoros",

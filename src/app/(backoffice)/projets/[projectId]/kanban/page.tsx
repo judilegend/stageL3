@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { WorkPackageList } from "@/components/backlog/WorkPackageList";
+import { WorkPackageList } from "@/components/kanban/WorkPackageList";
 import { getWorkPackagesByProjectId } from "@/services/workpackage-service";
 
 interface PageProps {
