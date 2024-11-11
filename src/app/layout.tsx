@@ -27,7 +27,6 @@ export const metadata: Metadata = {
   title: "DepannPC - Plateforme de Gestion",
   description: "Plateforme de gestion pour l'équipe DepannPC",
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,7 +39,6 @@ export default function RootLayout({
         <AuthProvider>
           <UserProvider>
             <CurrentProjectProvider>
-              {/* <SprintProvider> */}
               <ProjectProvider>
                 <WorkPackageProvider>
                   <ActivityProvider>
@@ -48,7 +46,6 @@ export default function RootLayout({
                   </ActivityProvider>
                 </WorkPackageProvider>
               </ProjectProvider>
-              {/* </SprintProvider> */}
             </CurrentProjectProvider>
           </UserProvider>
         </AuthProvider>
