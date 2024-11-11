@@ -1,44 +1,53 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { TaskCard } from "./TaskCard";
+import { BacklogCard } from "../backlog/BacklogCard";
 import { useTasks } from "@/contexts/TaskContext";
-import { Task } from "@/types/task";
-
-interface CategorizedTasks {
-  importantUrgent: Task[];
-  importantNotUrgent: Task[];
-  notImportantUrgent: Task[];
-  notImportantNotUrgent: Task[];
-}
+import { useParams } from "next/navigation";
+import { Task, ApiTask } from "@/types/task";
 
 export function TaskMatrix() {
   const { state } = useTasks();
-  const allTasks = Object.values(state.tasksByActivity).flat();
+  const params = useParams();
+  const projectId = params?.projectId as string;
 
-  const categorizedTasks: CategorizedTasks = {
-    importantUrgent: allTasks.filter(
-      (task) => task.importance === "important" && task.urgency === "urgent"
-    ),
-    importantNotUrgent: allTasks.filter(
-      (task) => task.importance === "important" && task.urgency === "not-urgent"
-    ),
-    notImportantUrgent: allTasks.filter(
-      (task) => task.importance === "not-important" && task.urgency === "urgent"
-    ),
-    notImportantNotUrgent: allTasks.filter(
-      (task) =>
-        task.importance === "not-important" && task.urgency === "not-urgent"
-    ),
-  };
+  const normalizedTasks = useMemo(() => {
+    const tasks = Array.isArray(state.projectTasks) ? state.projectTasks : [];
+    return tasks.map((task) => ({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      assignedUserId: task.assignedUserId,
+      activiteId: task.activiteId,
+      importance: task.importance,
+      urgency: task.urgency,
+      estimatedPomodoros: task.estimatedPomodoros,
+      completedPomodoros: task.completedPomodoros,
+      projectId: parseInt(projectId),
+    }));
+  }, [state.projectTasks, projectId]);
 
-  if (state.loading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600" />
-      </div>
-    );
-  }
+  const categorizedTasks = useMemo(
+    () => ({
+      importantUrgent: normalizedTasks.filter(
+        (task) => task.importance === "important" && task.urgency === "urgent"
+      ),
+      importantNotUrgent: normalizedTasks.filter(
+        (task) =>
+          task.importance === "important" && task.urgency === "not-urgent"
+      ),
+      notImportantUrgent: normalizedTasks.filter(
+        (task) =>
+          task.importance === "not-important" && task.urgency === "urgent"
+      ),
+      notImportantNotUrgent: normalizedTasks.filter(
+        (task) =>
+          task.importance === "not-important" && task.urgency === "not-urgent"
+      ),
+    }),
+    [normalizedTasks]
+  );
 
   return (
     <div className="grid grid-cols-2 gap-6">
@@ -50,7 +59,11 @@ export function TaskMatrix() {
         </CardHeader>
         <CardContent className="space-y-3">
           {categorizedTasks.importantUrgent.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <BacklogCard
+              key={`matrix-task-${task.id}`}
+              task={task}
+              projectId={projectId}
+            />
           ))}
           {categorizedTasks.importantUrgent.length === 0 && (
             <div className="text-sm text-gray-500 text-center py-4">
@@ -68,7 +81,11 @@ export function TaskMatrix() {
         </CardHeader>
         <CardContent className="space-y-3">
           {categorizedTasks.importantNotUrgent.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <BacklogCard
+              key={`matrix-task-${task.id}`}
+              task={task}
+              projectId={projectId}
+            />
           ))}
           {categorizedTasks.importantNotUrgent.length === 0 && (
             <div className="text-sm text-gray-500 text-center py-4">
@@ -86,7 +103,11 @@ export function TaskMatrix() {
         </CardHeader>
         <CardContent className="space-y-3">
           {categorizedTasks.notImportantUrgent.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <BacklogCard
+              key={`matrix-task-${task.id}`}
+              task={task}
+              projectId={projectId}
+            />
           ))}
           {categorizedTasks.notImportantUrgent.length === 0 && (
             <div className="text-sm text-gray-500 text-center py-4">
@@ -104,7 +125,11 @@ export function TaskMatrix() {
         </CardHeader>
         <CardContent className="space-y-3">
           {categorizedTasks.notImportantNotUrgent.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <BacklogCard
+              key={`matrix-task-${task.id}`}
+              task={task}
+              projectId={projectId}
+            />
           ))}
           {categorizedTasks.notImportantNotUrgent.length === 0 && (
             <div className="text-sm text-gray-500 text-center py-4">

@@ -14,6 +14,8 @@ import { useCurrentProject } from "./CurrentProjectContext";
 type TaskState = {
   tasksByActivity: Record<number, Task[]>;
   availableTasks: Task[];
+  projectTasks: Task[]; // Explicitly typed as Task array
+  allTasks: Task[];
   users: User[];
   loading: boolean;
   error: string | null;
@@ -28,6 +30,8 @@ type TaskAction =
   | { type: "SET_ERROR"; payload: string }
   | { type: "SET_USERS"; payload: User[] }
   | { type: "SET_AVAILABLE_TASKS"; payload: Task[] }
+  | { type: "SET_ALL_TASKS"; payload: Task[] }
+  | { type: "SET_PROJECT_TASKS"; payload: Task[] } // Add this line
   | {
       type: "UPDATE_USER_ASSIGNMENT";
       payload: { taskId: number; userId: number };
@@ -42,6 +46,8 @@ const TaskContext = createContext<
       deleteTask: (id: number, activiteId: number) => Promise<void>;
       assignTask: (taskId: number, userId: number) => Promise<void>;
       fetchAvailableTasks: () => Promise<void>;
+      fetchAllTasks: () => Promise<void>;
+      fetchProjectTasks: (projectId: number) => Promise<void>; // Add this line
     }
   | undefined
 >(undefined);
@@ -63,6 +69,12 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
         availableTasks: action.payload,
         loading: false,
       };
+    case "SET_ALL_TASKS":
+      return {
+        ...state,
+        allTasks: action.payload,
+        loading: false,
+      };
     case "ADD_TASK":
       return {
         ...state,
@@ -77,15 +89,21 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
     case "UPDATE_TASK":
       return {
         ...state,
+        projectTasks: Array.isArray(state.projectTasks)
+          ? state.projectTasks.map((task) =>
+              task.id === action.payload.id
+                ? { ...task, ...action.payload }
+                : task
+            )
+          : [],
         tasksByActivity: {
           ...state.tasksByActivity,
-          [action.payload.activiteId]: state.tasksByActivity[
-            action.payload.activiteId
-          ].map((task) =>
-            task.id === action.payload.id
-              ? { ...task, ...action.payload }
-              : task
-          ),
+          [action.payload.activiteId]:
+            state.tasksByActivity[action.payload.activiteId]?.map((task) =>
+              task.id === action.payload.id
+                ? { ...task, ...action.payload }
+                : task
+            ) || [],
         },
       };
     case "DELETE_TASK":
@@ -104,6 +122,14 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
       return { ...state, loading: true };
     case "SET_ERROR":
       return { ...state, error: action.payload, loading: false };
+    case "SET_PROJECT_TASKS":
+      return {
+        ...state,
+        projectTasks: action.payload,
+        loading: false,
+        error: null,
+      };
+
     case "UPDATE_USER_ASSIGNMENT":
       return {
         ...state,
@@ -125,12 +151,13 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
       return state;
   }
 };
-
 export function TaskProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(taskReducer, {
     tasksByActivity: {},
     availableTasks: [],
+    projectTasks: [], // Add this line
     users: [],
+    allTasks: [],
     loading: false,
     error: null,
   });
@@ -149,8 +176,20 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       }
     };
     initializeUsers();
+    fetchTasks(currentProject?.id || 0);
   }, []);
-
+  const fetchAllTasks = async () => {
+    dispatch({ type: "SET_LOADING" });
+    try {
+      const tasks = await taskService.getAllTasks();
+      dispatch({ type: "SET_ALL_TASKS", payload: tasks });
+    } catch (error) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: "Failed to fetch all tasks. Please try again.",
+      });
+    }
+  };
   const fetchTasks = async (activiteId: number) => {
     dispatch({ type: "SET_LOADING" });
     try {
@@ -174,6 +213,30 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         type: "SET_ERROR",
         payload: "Failed to fetch available tasks. Please try again.",
       });
+    }
+  };
+  // const fetchProjectTasks = async (projectId: number) => {
+  //   dispatch({ type: "SET_LOADING" });
+  //   try {
+  //     const tasks = await taskService.getTasksByProject(projectId);
+  //     const tasksArray = Array.isArray(tasks) ? tasks : [];
+  //     dispatch({ type: "SET_PROJECT_TASKS", payload: tasksArray });
+  //   } catch (error) {
+  //     dispatch({
+  //       type: "SET_ERROR",
+  //       payload: "Failed to fetch project tasks. Please try again.",
+  //     });
+  //   }
+  // };
+  const fetchProjectTasks = async (projectId: number) => {
+    dispatch({ type: "SET_LOADING" });
+    try {
+      const tasks = await taskService.getTasksByProject(projectId);
+      dispatch({ type: "SET_PROJECT_TASKS", payload: tasks });
+    } catch (error) {
+      console.error("Error in fetchProjectTasks:", error);
+      dispatch({ type: "SET_PROJECT_TASKS", payload: [] });
+      dispatch({ type: "SET_ERROR", payload: error.message });
     }
   };
 
@@ -232,11 +295,13 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const value = {
     state,
     fetchTasks,
+    fetchAllTasks,
     createTask,
     updateTask,
     deleteTask,
     assignTask,
     fetchAvailableTasks,
+    fetchProjectTasks, // Add this line
   };
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;

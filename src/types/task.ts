@@ -3,14 +3,27 @@ export interface Task {
   title: string;
   description: string;
   status: "todo" | "in_progress" | "review" | "done";
+  assignedUserId: number;
   activiteId: number;
-  sprintId: number | null; // Add this line
-  projectId: number | null; // Add this line
-  assignedUserId: number | null;
+  importance: string;
+  urgency: string;
   estimatedPomodoros: number;
   completedPomodoros: number;
-  urgency: "urgent" | "not-urgent";
-  importance: "important" | "not-important";
-  createdAt: string;
-  updatedAt: string;
+  sprintId?: number;
+  projectId?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ApiTask {
+  task_id: number;
+  task_title: string;
+  task_description: string;
+  status: string;
+  assignedUserId: number;
+  activity_id: number;
+  importance: string;
+  urgency: string;
+  estimatedPomodoros: number;
+  completedPomodoros: number;
 }

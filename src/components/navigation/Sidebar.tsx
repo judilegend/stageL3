@@ -12,7 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,51 +23,53 @@ interface SidebarProps {
   className?: string;
 }
 
-const menuItems = [
-  {
-    title: "Tableau de bord",
-    url: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Projets",
-    url: "/projets",
-    icon: FolderKanban,
-  },
-  {
-    title: "Product Backlog",
-    url: "/backlog",
-    icon: Archive,
-  },
-  {
-    title: "Gestion des tâches",
-    url: "/taches",
-    icon: ListTodo,
-  },
-  {
-    title: "Sprints",
-    url: "/sprints",
-    icon: Activity,
-  },
-  {
-    title: "Messages",
-    url: "/messages",
-    icon: MessageSquare,
-  },
-  {
-    title: "Gerer user",
-    url: "/gestion-utilisateurs",
-    icon: Users,
-  },
-];
-
 export function AppSidebar({ className }: SidebarProps) {
   const { user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
+  const projectId = params?.projectId;
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const userInitial = user?.username ? user.username[0].toUpperCase() : "U";
+
+  const menuItems = [
+    {
+      title: "Tableau de bord",
+      url: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Projets",
+      url: "/projets",
+      icon: FolderKanban,
+    },
+    {
+      title: "Product Backlog",
+      url: projectId ? `/projets/${projectId}/backlog` : "/backlog",
+      icon: Archive,
+    },
+    {
+      title: "Gestion des tâches",
+      url: projectId ? `/projets/${projectId}/taches` : "/taches",
+      icon: ListTodo,
+    },
+    {
+      title: "Sprints",
+      url: projectId ? `/projets/${projectId}/sprints` : "/sprints",
+      icon: Activity,
+    },
+    {
+      title: "Messages",
+      url: "/messages",
+      icon: MessageSquare,
+    },
+    {
+      title: "Gerer user",
+      url: "/gestion-utilisateurs",
+      icon: Users,
+    },
+  ];
 
   const handleNavigation = async (url: string) => {
     setIsLoading(true);

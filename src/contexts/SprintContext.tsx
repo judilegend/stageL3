@@ -36,14 +36,12 @@ export function SprintProvider({ children }: { children: React.ReactNode }) {
   const { currentProject } = useCurrentProject();
 
   useEffect(() => {
-    if (currentProject) {
-      fetchSprints(currentProject.id);
-    }
-  }, [currentProject]);
+    fetchSprints();
+  }, []);
 
-  const fetchSprints = async (projectId: number) => {
+  const fetchSprints = async () => {
     try {
-      const data = await sprintService.getSprintsByProject(projectId);
+      const data = await sprintService.getAllSprints();
       setSprints(data);
     } catch (err) {
       setError("Failed to fetch sprints");

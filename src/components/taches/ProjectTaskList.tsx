@@ -7,30 +7,19 @@ import { Plus } from "lucide-react";
 import { TaskModal } from "./TaskModal";
 import { Task } from "@/types/task";
 
-interface TaskListProps {
-  activiteId: number;
+interface ProjectTaskListProps {
+  projectId: string;
 }
 
-export function TaskList({ activiteId }: TaskListProps) {
+export function ProjectTaskList({ projectId }: ProjectTaskListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { state, fetchTasks } = useTasks();
-  const { tasksByActivity, loading, error } = state;
-  const { fetchProjectTasks } = useTasks();
-  const { projectTasks } = state;
-
-  // useEffect(() => {
-  //   fetchProjectTasks();
-  // }, []);
-  useEffect(() => {
-    fetchTasks(activiteId);
-  }, [activiteId]);
-
-  const activityTasks = tasksByActivity[activiteId] || [];
+  const { state, fetchProjectTasks, fetchAllTasks } = useTasks();
+  const { projectTasks, loading, error } = state;
 
   const tasksByStatus: Record<string, Task[]> = {
-    todo: activityTasks.filter((task) => task.status === "todo"),
-    in_progress: activityTasks.filter((task) => task.status === "in_progress"),
-    done: activityTasks.filter((task) => task.status === "done"),
+    todo: projectTasks.filter((task) => task.status === "todo"),
+    in_progress: projectTasks.filter((task) => task.status === "in_progress"),
+    done: projectTasks.filter((task) => task.status === "done"),
   };
 
   const statusLabels = {
@@ -58,7 +47,9 @@ export function TaskList({ activiteId }: TaskListProps) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Tâches</h3>
+        <h3 className="text-lg font-semibold">
+          Tâches du Projet ({projectTasks.length} total)
+        </h3>
         <Button
           onClick={() => setIsModalOpen(true)}
           className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
@@ -69,7 +60,7 @@ export function TaskList({ activiteId }: TaskListProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {Object.entries(tasksByStatus).map(([status, tasks]) => (
+        {/* {Object.entries(tasksByStatus).map(([status, tasks]) => (
           <div key={status} className="space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="font-medium text-gray-700">
@@ -90,16 +81,15 @@ export function TaskList({ activiteId }: TaskListProps) {
               )}
             </div>
           </div>
-        ))}
+        ))} */}
       </div>
 
-      <TaskModal
+      {/* <TaskModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        activiteId={activiteId}
-      />
+        projectId={parseInt(projectId)}
+      /> */}
     </div>
   );
 }
-
-export default TaskList;
+export default ProjectTaskList;

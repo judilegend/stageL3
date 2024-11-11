@@ -93,12 +93,39 @@ export const taskService = {
     if (!response.ok) throw new Error("Failed to fetch available tasks");
     return response.json();
   },
+  // async getTasksByProject(projectId: number): Promise<Task[]> {
+  //   const response = await fetch(`${API_URL}/tasks/project/${projectId}`, {
+  //     credentials: "include",
+  //     headers: defaultHeaders,
+  //   });
+  //   if (!response.ok) throw new Error("Failed to fetch project tasks");
+  //   return response.json();
+  // },
   async getTasksByProject(projectId: number): Promise<Task[]> {
-    const response = await fetch(`${API_URL}/tasks/project/${projectId}`, {
+    try {
+      const response = await fetch(`${API_URL}/tasks/project/${projectId}`, {
+        credentials: "include",
+        headers: defaultHeaders,
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      const data = await response.json();
+      return Array.isArray(data) ? data : data ? [data] : [];
+    } catch (error) {
+      console.error("API Error:", error);
+      return [];
+    }
+  },
+  async getAllTasks(): Promise<Task[]> {
+    const response = await fetch(`${API_URL}/tasks/all`, {
       credentials: "include",
       headers: defaultHeaders,
     });
-    if (!response.ok) throw new Error("Failed to fetch project tasks");
+    if (!response.ok) throw new Error("Failed to fetch all tasks");
     return response.json();
   },
 };
