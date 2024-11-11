@@ -41,12 +41,14 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "not_started":
-        return "bg-gray-100 text-gray-800 border border-gray-200";
-      case "in_progress":
+      case "submitted":
         return "bg-blue-100 text-blue-800 border border-blue-200";
-      case "completed":
+      case "in_review":
+        return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+      case "approved":
         return "bg-green-100 text-green-800 border border-green-200";
+      case "rejected":
+        return "bg-red-100 text-red-800 border border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border border-gray-200";
     }
@@ -61,9 +63,10 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
   const getStatusLabel = (status: string) => {
     const statusMap = {
-      not_started: "Non démarré",
-      in_progress: "En cours",
-      completed: "Terminé",
+      submitted: "Soumis",
+      in_review: "En révision",
+      approved: "Approuvé",
+      rejected: "Rejeté",
     };
     return statusMap[status as keyof typeof statusMap] || status;
   };

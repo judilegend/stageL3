@@ -94,23 +94,13 @@ export default function EditProjectDialog({
           <DialogTitle>Modifier le projet</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Titre du projet</label>
               <Input
                 value={formData.title}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, title: e.target.value }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date limite</label>
-              <Input
-                type="date"
-                value={formData.deadline}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, deadline: e.target.value }))
                 }
               />
             </div>
@@ -130,7 +120,7 @@ export default function EditProjectDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 ">
             <div className="space-y-2">
               <label className="text-sm font-medium">Statut</label>
               <Select
@@ -150,7 +140,7 @@ export default function EditProjectDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <label className="text-sm font-medium">Progression (%)</label>
               <Input
                 type="number"
@@ -162,6 +152,16 @@ export default function EditProjectDialog({
                     ...prev,
                     progress: parseInt(e.target.value),
                   }))
+                }
+              />
+            </div> */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date limite</label>
+              <Input
+                type="date"
+                value={formData.deadline}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, deadline: e.target.value }))
                 }
               />
             </div>

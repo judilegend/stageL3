@@ -76,3 +76,44 @@ BEGIN
 END //
 
 DELIMITER ;
+
+
+
+
+DELIMITER //
+
+CREATE PROCEDURE sp_update_project_progress(IN p_project_id INT)
+BEGIN
+    DECLARE v_progress DECIMAL(5,2);
+    
+    -- Calculate progress based on task status weights
+    SELECT 
+        COALESCE(
+            ROUND(
+                (
+                    (completed_tasks * 100) + 
+                    (in_progress_tasks * 50) + 
+                    (review_tasks * 75)
+                ) / NULLIF(total_tasks, 0)
+            , 0)
+        , 0)
+    INTO v_progress
+    FROM 
+        vw_project_task_status
+    WHERE 
+        projectId = p_project_id;
+
+    -- Update project progress while maintaining submission status
+    UPDATE Projects 
+    SET 
+        progress = v_progress,
+        status = CASE 
+            WHEN status NOT IN ('submitted', 'in_review', 'approved', 'rejected') 
+            THEN 'submitted'
+            ELSE status
+        END
+    WHERE 
+        id = p_project_id;
+END //
+
+DELIMITER ;
