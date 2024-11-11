@@ -1,5 +1,4 @@
 "use client";
-
 import {
   createContext,
   useContext,
@@ -15,6 +14,7 @@ interface CurrentProjectContextType {
   currentProject: Project | null;
   setCurrentProject: (project: Project | null) => void;
   loading: boolean;
+  selectProject: (projectId: string) => Promise<void>;
 }
 
 const CurrentProjectContext = createContext<
@@ -26,21 +26,27 @@ export function CurrentProjectProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
 
+  const selectProject = async (projectId: string) => {
+    try {
+      const project = await projectService.getProjectById(projectId);
+      setCurrentProject(project);
+      localStorage.setItem("currentProjectId", projectId);
+    } catch (error) {
+      console.error("Error loading project:", error);
+    }
+  };
+
   useEffect(() => {
     const loadProject = async () => {
-      if (pathname) {
-        const projectId = pathname.split("/")[2];
-        if (projectId) {
-          try {
-            const project = await projectService.getProjectById(projectId);
-            setCurrentProject(project);
-          } catch (error) {
-            console.error("Erreur de chargement du projet:", error);
-          } finally {
-            setLoading(false);
-          }
-        }
+      const storedProjectId = localStorage.getItem("currentProjectId");
+      const projectIdFromPath = pathname?.split("/")[2];
+
+      if (projectIdFromPath) {
+        await selectProject(projectIdFromPath);
+      } else if (storedProjectId && !currentProject) {
+        await selectProject(storedProjectId);
       }
+      setLoading(false);
     };
 
     loadProject();
@@ -48,7 +54,12 @@ export function CurrentProjectProvider({ children }: { children: ReactNode }) {
 
   return (
     <CurrentProjectContext.Provider
-      value={{ currentProject, setCurrentProject, loading }}
+      value={{
+        currentProject,
+        setCurrentProject,
+        loading,
+        selectProject,
+      }}
     >
       {children}
     </CurrentProjectContext.Provider>
