@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProjects } from "@/contexts/ProjectContext";
 import { useCurrentProject } from "@/contexts/CurrentProjectContext";
 import { useRouter, usePathname } from "next/navigation";
+import { projectService } from "@/services/projectService";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -23,7 +24,30 @@ export default function Navbar() {
   const { logout, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const { state } = useProjects();
+  const { state, dispatch } = useProjects();
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      dispatch({ type: "SET_LOADING" });
+      try {
+        const projects = await projectService.getAllProjects();
+        dispatch({ type: "SET_PROJECTS", payload: projects });
+      } catch (error) {
+        dispatch({
+          type: "SET_ERROR",
+          payload: "Erreur de chargement des projets",
+        });
+      }
+    };
+    loadProjects();
+  }, [dispatch]);
+
+  useEffect(() => {
+    const storedProjectId = localStorage.getItem("currentProjectId");
+    if (storedProjectId && !currentProject) {
+      selectProject(storedProjectId);
+    }
+  }, []);
 
   const workspaceLinks = [
     {
@@ -64,13 +88,6 @@ export default function Navbar() {
     return paths?.[3] || "kanban";
   };
 
-  useEffect(() => {
-    const storedProjectId = localStorage.getItem("currentProjectId");
-    if (storedProjectId && !currentProject) {
-      selectProject(storedProjectId);
-    }
-  }, []);
-
   const handleLogout = () => {
     logout();
     localStorage.removeItem("currentProjectId");
@@ -110,7 +127,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* {currentProject && (
+          {currentProject && (
             <div className="flex gap-2">
               {workspaceLinks.map(({ href, label, icon: Icon, value }) => (
                 <Link key={href} href={href}>
@@ -127,7 +144,7 @@ export default function Navbar() {
                 </Link>
               ))}
             </div>
-          )} */}
+          )}
         </div>
 
         <div className="flex items-center gap-4">
