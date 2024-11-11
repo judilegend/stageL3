@@ -10,7 +10,6 @@ class Sprint extends Model {
   public goal!: string;
   public progress!: number;
   public status!: "planned" | "in_progress" | "completed";
-  public tacheId!: number | null;
   public tasks?: Tache[];
 }
 
@@ -47,16 +46,6 @@ Sprint.init(
       allowNull: false,
       defaultValue: "planned",
     },
-    tacheId: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      primaryKey: true,
-      references: {
-        model: Tache,
-        key: "id",
-      },
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
-    },
   },
   {
     sequelize,
@@ -65,11 +54,13 @@ Sprint.init(
   }
 );
 
-Sprint.hasMany(Tache, {
-  foreignKey: "tacheId",
-  as: "tasks",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
+const defineAssociations = () => {
+  Sprint.hasMany(Tache, {
+    foreignKey: "sprintId",
+    as: "tasks",
+  });
+};
+
+setTimeout(defineAssociations, 0);
 
 export default Sprint;

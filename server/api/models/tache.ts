@@ -26,16 +26,7 @@ Tache.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    // sprintId: {
-    //   type: DataTypes.INTEGER.UNSIGNED,
-    //   allowNull: true,
-    //   references: {
-    //     model: Sprint,
-    //     key: "id",
-    //   },
-    //   onUpdate: "CASCADE",
-    //   onDelete: "SET NULL",
-    // },
+
     activiteId: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -57,6 +48,16 @@ Tache.init(
       allowNull: true,
       references: {
         model: User,
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
+    },
+    sprintId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: Sprint,
         key: "id",
       },
       onUpdate: "CASCADE",
