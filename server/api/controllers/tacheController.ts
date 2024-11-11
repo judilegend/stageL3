@@ -19,7 +19,8 @@ export const getTachesByProjectId = async (req: Request, res: Response) => {
     const taches = await tacheService.getTachesByProjectId(parseInt(projectId));
     res.json(taches);
   } catch (error) {
-    res.status(400).json({
+    console.error("Project tasks fetch error:", error);
+    res.status(500).json({
       message: "Error fetching project tasks",
       error: error.message,
     });
@@ -167,6 +168,17 @@ export const getTasksByQuadrant = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(400).json({
       message: "Error fetching tasks by quadrant",
+      error: error.message,
+    });
+  }
+};
+export const getAllTaches = async (req: Request, res: Response) => {
+  try {
+    const taches = await tacheService.getAllTaches();
+    res.json(taches);
+  } catch (error) {
+    res.status(400).json({
+      message: "Error fetching all tasks",
       error: error.message,
     });
   }

@@ -1,6 +1,7 @@
-import { Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
 import Tache from "../models/tache";
 import User from "../models/user";
+import sequelize from "../config/database";
 export const createTache = async (TacheData: Partial<Tache>) => {
   return Tache.create(TacheData);
 };
@@ -104,16 +105,29 @@ export const getAvailableTasks = async () => {
 };
 // Ajouter cette nouvelle fonction
 export const getTachesByProjectId = async (projectId: number) => {
-  return await Tache.findAll({
-    where: { projectId },
-    include: [
+  try {
+    const tasks = await sequelize.query(
+      `SELECT t.*, a.id as activity_id 
+       FROM Taches t 
+       JOIN Activites a ON t.activiteId = a.id 
+       JOIN WorkPackages w ON a.workPackageId = w.id 
+       WHERE w.projectId = :projectId`,
       {
-        model: User,
-        as: "assignedUser",
-        attributes: ["id", "username", "email"],
-        required: false, // Rend la jointure LEFT JOIN au lieu de INNER JOIN
-      },
-    ],
+        replacements: { projectId },
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    return tasks.length > 0 ? tasks : [];
+  } catch (error) {
+    console.error("Database error:", error);
+    return [];
+  }
+};
+
+export const getAllTaches = async () => {
+  return await Tache.findAll({
     order: [["createdAt", "DESC"]],
+    include: [User],
   });
 };

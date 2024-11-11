@@ -19,5 +19,6 @@ router.put("/:id/status", tacheController.updateTacheStatus);
 router.get("/categories", tacheController.getTasksByCategory);
 router.get("/available", tacheController.getAvailableTasks);
 router.get("/project/:projectId", tacheController.getTachesByProjectId);
+router.get("/all", tacheController.getAllTaches);
 
 export default router;
