@@ -1,3 +1,5 @@
+import { QueryTypes } from "sequelize";
+import sequelize from "../config/database";
 import Project from "../models/project";
 import WorkPackage from "../models/workpackage";
 
@@ -34,4 +36,14 @@ export const deleteProject = async (id: number) => {
     throw new Error("Project not found");
   }
   return project.destroy();
+};
+export const getProjectProgress = async (projectId: number) => {
+  const [result] = await sequelize.query(
+    "SELECT * FROM vw_project_task_status WHERE projectId = :projectId",
+    {
+      replacements: { projectId },
+      type: QueryTypes.SELECT,
+    }
+  );
+  return result;
 };

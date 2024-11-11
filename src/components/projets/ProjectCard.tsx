@@ -1,5 +1,4 @@
 "use client";
-
 import { Project } from "@/types/project";
 import {
   Card,
@@ -42,17 +41,31 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "submitted":
-        return "bg-yellow-100 text-yellow-800 border border-yellow-200";
-      case "in_review":
+      case "not_started":
+        return "bg-gray-100 text-gray-800 border border-gray-200";
+      case "in_progress":
         return "bg-blue-100 text-blue-800 border border-blue-200";
-      case "approved":
+      case "completed":
         return "bg-green-100 text-green-800 border border-green-200";
-      case "rejected":
-        return "bg-red-100 text-red-800 border border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border border-gray-200";
     }
+  };
+
+  const getProgressColor = (progress: number) => {
+    if (progress >= 75) return "bg-green-500";
+    if (progress >= 50) return "bg-yellow-500";
+    if (progress >= 25) return "bg-orange-500";
+    return "bg-red-500";
+  };
+
+  const getStatusLabel = (status: string) => {
+    const statusMap = {
+      not_started: "Non démarré",
+      in_progress: "En cours",
+      completed: "Terminé",
+    };
+    return statusMap[status as keyof typeof statusMap] || status;
   };
 
   return (
@@ -68,8 +81,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 project.status
               )} px-3 py-1 rounded-full`}
             >
-              {project.status.charAt(0).toUpperCase() +
-                project.status.slice(1).replace("_", " ")}
+              {getStatusLabel(project.status)}
             </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -133,7 +145,9 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           </div>
           <div className="w-full bg-gray-100 rounded-full h-2">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className={`${getProgressColor(
+                project.progress
+              )} h-2 rounded-full transition-all duration-300`}
               style={{ width: `${project.progress}%` }}
             />
           </div>
@@ -147,7 +161,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         <Link href={`/projets/${project.id}/kanban`}>
           <Button
             variant="default"
-            className="bg-gray-50  text-gray-500 gap-2 group"
+            className="bg-gray-50 text-gray-500 gap-2 group"
           >
             <Layout className="h-4 w-4" />
             Interface Kanban
