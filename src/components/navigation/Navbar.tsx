@@ -94,7 +94,7 @@ export default function Navbar() {
 
     return (
       <div className="flex gap-2">
-        {workspaceLinks.map(({ href, label, icon: Icon, active }) => (
+        {/* {workspaceLinks.map(({ href, label, icon: Icon, active }) => (
           <Link key={href} href={href}>
             <Button
               variant={active ? "default" : "ghost"}
@@ -104,7 +104,7 @@ export default function Navbar() {
               {label}
             </Button>
           </Link>
-        ))}
+        ))} */}
       </div>
     );
   };

@@ -122,26 +122,26 @@ export function SprintCard({ sprint }: SprintCardProps) {
       </CardContent>
 
       <CardFooter className="flex justify-between">
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowTasks(!showTasks)}>
-            {showTasks ? "Hide Tasks" : "Show Tasks"}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowAddTasks(true)}
-            className="flex items-center gap-2"
-          >
-            <PlusCircle className="h-4 w-4" />
-            Add Tasks
-          </Button>
-        </div>
+        {/* <div className="flex gap-2"> */}
+        <Button variant="outline" onClick={() => setShowTasks(!showTasks)}>
+          {showTasks ? "Hide Tasks" : "Show Tasks"}
+        </Button>
         <Button
+          variant="outline"
+          onClick={() => setShowAddTasks(true)}
+          className="flex items-center gap-2"
+        >
+          <PlusCircle className="h-4 w-4" />
+          Add Tasks
+        </Button>
+        {/* </div> */}
+        {/* <Button
           variant="secondary"
           onClick={handleStatusChange}
           disabled={sprint.status === "completed"}
         >
           {sprint.status === "in_progress" ? "Complete Sprint" : "Start Sprint"}
-        </Button>
+        </Button> */}
       </CardFooter>
 
       <AddTasksToSprintDialog
