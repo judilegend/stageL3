@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import {
   LayoutDashboard,
@@ -12,10 +11,11 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, usePathname, useParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrentProject } from "@/contexts/CurrentProjectContext";
 import CreateProjectDialog from "../projets/CreateProjectDialog";
 import { LoadingSpinner } from "../ui/loading-spinner";
 
@@ -25,10 +25,9 @@ interface SidebarProps {
 
 export function AppSidebar({ className }: SidebarProps) {
   const { user } = useAuth();
+  const { currentProject } = useCurrentProject();
   const router = useRouter();
   const pathname = usePathname();
-  const params = useParams();
-  const projectId = params?.projectId;
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const userInitial = user?.username ? user.username[0].toUpperCase() : "U";
@@ -46,18 +45,25 @@ export function AppSidebar({ className }: SidebarProps) {
     },
     {
       title: "Product Backlog",
-      url: projectId ? `/projets/${projectId}/backlog` : "/backlog",
+      url: currentProject
+        ? `/projets/${currentProject.id}/backlog`
+        : "/backlog",
       icon: Archive,
+      requiresProject: true,
     },
     {
       title: "Gestion des tâches",
-      url: projectId ? `/projets/${projectId}/taches` : "/taches",
+      url: currentProject ? `/projets/${currentProject.id}/taches` : "/taches",
       icon: ListTodo,
+      requiresProject: true,
     },
     {
       title: "Sprints",
-      url: projectId ? `/projets/${projectId}/sprints` : "/sprints",
+      url: currentProject
+        ? `/projets/${currentProject.id}/sprints`
+        : "/sprints",
       icon: Activity,
+      requiresProject: true,
     },
     {
       title: "Messages",
@@ -71,7 +77,14 @@ export function AppSidebar({ className }: SidebarProps) {
     },
   ];
 
-  const handleNavigation = async (url: string) => {
+  const handleNavigation = async (
+    url: string,
+    requiresProject: boolean = false
+  ) => {
+    if (requiresProject && !currentProject) {
+      return;
+    }
+
     setIsLoading(true);
     try {
       await router.push(url);
@@ -104,12 +117,16 @@ export function AppSidebar({ className }: SidebarProps) {
             {menuItems.map((item) => (
               <button
                 key={item.title}
-                onClick={() => handleNavigation(item.url)}
+                onClick={() => handleNavigation(item.url, item.requiresProject)}
+                disabled={item.requiresProject && !currentProject}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-lg px-3 py-2 transition-colors relative group",
                   pathname === item.url
                     ? "bg-gray-100"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
+                  item.requiresProject &&
+                    !currentProject &&
+                    "opacity-50 cursor-not-allowed"
                 )}
               >
                 <item.icon

@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import {
   Bell,
@@ -7,25 +6,25 @@ import {
   Layout,
   ListTodo,
   MessageSquare,
+  Activity,
+  Archive,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjects } from "@/contexts/ProjectContext";
-import { useRouter, usePathname, useParams } from "next/navigation";
+import { useCurrentProject } from "@/contexts/CurrentProjectContext";
+import { useRouter, usePathname } from "next/navigation";
 import { projectService } from "@/services/projectService";
-import { Project } from "@/types/project";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function Navbar() {
   const [userMenu, setUserMenu] = useState(false);
   const [projectMenu, setProjectMenu] = useState(false);
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const { currentProject, selectProject } = useCurrentProject();
   const { logout, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const params = useParams();
   const { state, dispatch } = useProjects();
-  const projectId = params?.projectId as string;
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -44,70 +43,59 @@ export default function Navbar() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (projectId) {
-      const loadCurrentProject = async () => {
-        try {
-          const project = await projectService.getProjectById(projectId);
-          setCurrentProject(project);
-        } catch (error) {
-          console.error("Erreur lors du chargement du projet:", error);
-        }
-      };
-      loadCurrentProject();
+    const storedProjectId = localStorage.getItem("currentProjectId");
+    if (storedProjectId && !currentProject) {
+      selectProject(storedProjectId);
     }
-  }, [projectId]);
+  }, []);
 
-  const handleProjectChange = (projectId: string) => {
-    router.push(`/projets/${projectId}/kanban`);
+  const workspaceLinks = [
+    {
+      href: currentProject ? `/projets/${currentProject.id}/kanban` : "#",
+      label: "Kanban",
+      icon: Layout,
+      value: "kanban",
+    },
+    {
+      href: currentProject ? `/projets/${currentProject.id}/backlog` : "#",
+      label: "Backlog",
+      icon: Archive,
+      value: "backlog",
+    },
+    {
+      href: currentProject ? `/projets/${currentProject.id}/taches` : "#",
+      label: "Tâches",
+      icon: ListTodo,
+      value: "taches",
+    },
+    {
+      href: currentProject ? `/projets/${currentProject.id}/sprints` : "#",
+      label: "Sprints",
+      icon: Activity,
+      value: "sprints",
+    },
+  ];
+
+  const handleProjectChange = async (projectId: string) => {
+    await selectProject(projectId);
+    const currentWorkspace = pathname?.split("/")[3] || "kanban";
+    router.push(`/projets/${projectId}/${currentWorkspace}`);
     setProjectMenu(false);
+  };
+
+  const getCurrentWorkspace = () => {
+    const paths = pathname?.split("/");
+    return paths?.[3] || "kanban";
   };
 
   const handleLogout = () => {
     logout();
-    setUserMenu(false);
+    localStorage.removeItem("currentProjectId");
     router.push("/login");
+    setUserMenu(false);
   };
 
   const userInitial = user?.username ? user.username[0].toUpperCase() : "U";
-
-  const WorkspaceSelector = () => {
-    const workspaceLinks = [
-      {
-        href: `/projets/${projectId}/kanban`,
-        label: "Kanban",
-        icon: Layout,
-        active: pathname?.includes("/kanban") ?? false,
-      },
-      {
-        href: `/projets/${projectId}/taches`,
-        label: "Tâches",
-        icon: ListTodo,
-        active: pathname?.includes("/taches") ?? false,
-      },
-      {
-        href: `/projets/${projectId}/sprints`,
-        label: "Sprints",
-        icon: MessageSquare,
-        active: pathname?.includes("/sprints") ?? false,
-      },
-    ];
-
-    return (
-      <div className="flex gap-2">
-        {/* {workspaceLinks.map(({ href, label, icon: Icon, active }) => (
-          <Link key={href} href={href}>
-            <Button
-              variant={active ? "default" : "ghost"}
-              className="gap-2 text-sm"
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </Button>
-          </Link>
-        ))} */}
-      </div>
-    );
-  };
 
   return (
     <nav className="bg-white rounded-lg border-b mx-4 mt-3 border-gray-200 shadow-md">
@@ -139,7 +127,24 @@ export default function Navbar() {
             )}
           </div>
 
-          {currentProject && <WorkspaceSelector />}
+          {currentProject && (
+            <div className="flex gap-2">
+              {workspaceLinks.map(({ href, label, icon: Icon, value }) => (
+                <Link key={href} href={href}>
+                  <Button
+                    variant={
+                      getCurrentWorkspace() === value ? "default" : "ghost"
+                    }
+                    className="gap-2 text-sm"
+                    disabled={!currentProject}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {label}
+                  </Button>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-4">

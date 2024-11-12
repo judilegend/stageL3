@@ -1,25 +1,25 @@
 "use client";
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { KanbanBoard } from "@/components/backlog/KanbanBoard";
 import { TaskMatrix } from "@/components/taches/TaskMatrix";
 import { useTasks } from "@/contexts/TaskContext";
-import { useParams } from "next/navigation";
+import { useCurrentProject } from "@/contexts/CurrentProjectContext";
 import { ApiTask } from "@/types/task";
 
 export default function BacklogPage() {
+  const { currentProject } = useCurrentProject();
   const { state, fetchProjectTasks, updateTask } = useTasks();
-  const params = useParams();
-  const projectId = params?.projectId as string;
   const [localTasks, setLocalTasks] = useState<ApiTask[]>([]);
 
   useEffect(() => {
     const loadTasks = async () => {
-      if (projectId) {
-        await fetchProjectTasks(parseInt(projectId));
+      if (currentProject?.id) {
+        await fetchProjectTasks(currentProject.id);
       }
     };
     loadTasks();
-  }, [projectId]);
+    console.log("currentProject", currentProject);
+  }, [currentProject]);
 
   useEffect(() => {
     if (state.projectTasks) {
@@ -43,19 +43,18 @@ export default function BacklogPage() {
     }
   }, [state.projectTasks]);
 
-  const handleUpdateTask = useCallback(
-    async (id: number, update: { status: string }) => {
+  const handleUpdateTask = async (id: number, update: { status: string }) => {
+    if (currentProject?.id) {
       try {
         await updateTask(id, {
           status: update.status as "done" | "todo" | "in_progress" | "review",
         });
-        await fetchProjectTasks(parseInt(projectId));
+        await fetchProjectTasks(currentProject.id);
       } catch (error) {
         console.error("Error updating task:", error);
       }
-    },
-    [updateTask, fetchProjectTasks, projectId]
-  );
+    }
+  };
 
   return (
     <div className="space-y-8 p-6">
@@ -68,7 +67,7 @@ export default function BacklogPage() {
         </div>
       </div>
       <KanbanBoard
-        projectId={projectId}
+        projectId={currentProject?.id.toString() || ""}
         tasks={localTasks}
         onUpdateTask={handleUpdateTask}
       />

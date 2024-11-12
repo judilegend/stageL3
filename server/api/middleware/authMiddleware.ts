@@ -43,9 +43,9 @@ export const authenticate = async (
       email: string;
       role: string;
     };
-    console.log("Decoded JWT:", decoded); // Log pour voir ce qui est décodé
+    // console.log("Decoded JWT:", decoded); // Log pour voir ce qui est décodé
     req.user = decoded;
-    console.log(req.user);
+    // console.log(req.user);
     next();
   } catch (error) {
     console.error("JWT verification failed:", error.message);

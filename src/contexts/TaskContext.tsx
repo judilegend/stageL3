@@ -236,10 +236,13 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Error in fetchProjectTasks:", error);
       dispatch({ type: "SET_PROJECT_TASKS", payload: [] });
-      dispatch({ type: "SET_ERROR", payload: error.message });
+      dispatch({
+        type: "SET_ERROR",
+        payload:
+          error instanceof Error ? error.message : "An unknown error occurred",
+      });
     }
   };
-
   const createTask = async (task: Omit<Task, "id">) => {
     try {
       const newTask = await taskService.createTask(task);

@@ -1,74 +1,58 @@
-import { DataTypes, Model } from "sequelize";
+import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
 import User from "./user";
 
-class Message extends Model {
+class DirectMessage extends Model {
   public id!: number;
-  public senderId!: number;
-  public receiverId?: number;
-  public channelId?: number;
   public content!: string;
-  public fileUrl?: string;
-  public messageType!: "text" | "file" | "image";
-  public timestamp!: Date;
+  public sender_id!: number;
+  public receiver_id!: number;
+  public read!: boolean;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
-Message.init(
+DirectMessage.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true,
     },
-    senderId: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
-      references: {
-        model: User,
-        key: "id",
-      },
-      onUpdate: "CASCADE",
-      onDelete: "CASCADE",
-    },
-    receiverId: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: true,
-      references: {
-        model: User,
-        key: "id",
-      },
-      onUpdate: "CASCADE",
-      onDelete: "SET NULL",
-    },
-    channelId: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: true,
-    },
     content: {
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    fileUrl: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    messageType: {
-      type: DataTypes.ENUM("text", "file", "image"),
+    sender_id: {
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
-      defaultValue: "text",
+      references: {
+        model: User,
+        key: "id",
+      },
     },
-    timestamp: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+    receiver_id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      references: {
+        model: User,
+        key: "id",
+      },
+    },
+    read: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   {
+    tableName: "direct_messages",
     sequelize,
-    modelName: "Message",
+    timestamps: true,
+    underscored: true,
   }
 );
 
-// Message.belongsTo(User, { foreignKey: "senderId", as: "sender" });
-// Message.belongsTo(User, { foreignKey: "receiverId", as: "receiver" });
+DirectMessage.belongsTo(User, { as: "sender", foreignKey: "sender_id" });
+DirectMessage.belongsTo(User, { as: "receiver", foreignKey: "receiver_id" });
 
-export default Message;
+export default DirectMessage;
