@@ -22,6 +22,7 @@ export const UserList = ({ currentUserId }: UserListProps) => {
     loadConversation,
     setSelectedUser,
     selectedConversation,
+    unreadCounts,
   } = useMessages();
 
   useEffect(() => {
@@ -98,10 +99,17 @@ export const UserList = ({ currentUserId }: UserListProps) => {
                     : "hover:bg-gray-100"
                 }`}
               >
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="font-semibold text-blue-600">
-                    {user.username.charAt(0).toUpperCase()}
-                  </span>
+                <div className="relative">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="font-semibold text-blue-600">
+                      {user.username.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  {unreadCounts[user.id] > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                      {unreadCounts[user.id]}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">

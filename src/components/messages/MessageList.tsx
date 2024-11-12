@@ -4,13 +4,24 @@ import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 
 export const MessageList = () => {
-  const { messages } = useMessages();
+  const { messages, selectedUser, markMessagesAsRead } = useMessages();
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (selectedUser && messages.length > 0) {
+      const unreadMessages = messages.some(
+        (message) => !message.read && message.sender_id === selectedUser.id
+      );
+      if (unreadMessages) {
+        markMessagesAsRead(selectedUser.id);
+      }
+    }
+  }, [selectedUser, messages]);
 
   if (!messages || messages.length === 0) {
     return (

@@ -49,6 +49,46 @@ class MessageController {
       res.status(500).json({ error: "Failed to fetch conversation" });
     }
   }
+  async getUnreadMessagesCount(
+    req: Request & { user?: { id: string } },
+    res: Response
+  ) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const unreadCounts = await messageService.getUnreadMessagesCount(
+        parseInt(userId)
+      );
+      res.status(200).json(unreadCounts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch unread counts" });
+    }
+  }
+
+  async markMessagesAsRead(
+    req: Request & { user?: { id: string } },
+    res: Response
+  ) {
+    try {
+      const { senderId } = req.params;
+      const receiverId = req.user?.id;
+
+      if (!receiverId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      await messageService.markMessagesAsRead(
+        parseInt(senderId),
+        parseInt(receiverId)
+      );
+      res.status(200).json({ message: "Messages marked as read" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark messages as read" });
+    }
+  }
 }
 
 export default new MessageController();
