@@ -6,12 +6,17 @@ import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { MessageHeader } from "@/components/messages/MessageHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function MessagesPage() {
   const { user } = useAuth();
 
   if (!user) {
-    return <div>Please login to access messages</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-lg text-gray-600">Please login to access messages</p>
+      </div>
+    );
   }
 
   return (
@@ -21,18 +26,21 @@ export default function MessagesPage() {
   );
 }
 
-// Create a new component to use the context
 function MessagesContent({ userId }: { userId: number }) {
-  const { selectedUser } = useMessages();
+  const { isGroupChat } = useMessages();
 
   return (
-    <div className="flex h-[700px] mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
-      <UserList currentUserId={userId} />
-      <div className="flex-1 flex flex-col">
-        <MessageHeader selectedUser={selectedUser} />
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <MessageList />
-          <MessageInput />
+    <div className="container mx-auto px-4 py-8">
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden h-[700px]">
+        <div className="flex h-full">
+          <UserList currentUserId={userId} />
+          <div className="flex-1 flex flex-col">
+            <MessageHeader />
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <MessageList />
+              <MessageInput />
+            </div>
+          </div>
         </div>
       </div>
     </div>

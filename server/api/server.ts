@@ -19,6 +19,7 @@ import sprintRoutes from "./routes/sprintRoutes";
 import tacheRoutes from "./routes/tacheRoutes";
 import messageRoutes from "./routes/messageRoutes";
 import pieceJointeRoutes from "./routes/pieceJointeRoutes";
+import groupMessageRoutes from "./routes/groupMessageRoutes";
 
 const app = express();
 const server = http.createServer(app);
@@ -52,6 +53,7 @@ app.use("/api/activities", activiteRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/pomodoro", pomodoroRoutes);
 app.use("/api/piece-jointes", pieceJointeRoutes);
+app.use("/api/groups", groupMessageRoutes);
 
 setupSocketServer(io);
 console.log(

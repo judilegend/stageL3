@@ -16,6 +16,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { projectService } from "@/services/projectService";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import ProjectSubmenu from "./ProjetSubMenu";
 
 export default function Navbar() {
   const [userMenu, setUserMenu] = useState(false);
@@ -102,32 +103,33 @@ export default function Navbar() {
       <div className="flex justify-between items-center px-6 py-3">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <button
-              onClick={() => setProjectMenu(!projectMenu)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-700"
-            >
-              <span className="font-medium">
-                {currentProject?.title || "Sélectionner un projet"}
-              </span>
-              <ChevronDown className="h-4 w-4" />
-            </button>
-
+            <div className="flex items-center gap-8">
+              <span>Mes Projets</span>
+              <button
+                onClick={() => setProjectMenu(!projectMenu)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-700"
+              >
+                <span className="font-medium">
+                  {currentProject?.title || "Sélectionner un projet"}
+                </span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </div>
             {projectMenu && (
-              <div className="absolute left-0 mt-2 w-64 rounded-lg bg-white py-2 shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+              <div className="absolute left-5 mt-2 w-64 rounded-lg bg-white py-2 shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                 {state.projects.map((project) => (
-                  <button
+                  <ProjectSubmenu
                     key={project.id}
-                    onClick={() => handleProjectChange(project.id.toString())}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    {project.title}
-                  </button>
+                    project={project}
+                    onProjectSelect={handleProjectChange}
+                    closeMenu={() => setProjectMenu(false)}
+                  />
                 ))}
               </div>
             )}
           </div>
 
-          {currentProject && (
+          {/* {currentProject && (
             <div className="flex gap-2">
               {workspaceLinks.map(({ href, label, icon: Icon, value }) => (
                 <Link key={href} href={href}>
@@ -144,7 +146,7 @@ export default function Navbar() {
                 </Link>
               ))}
             </div>
-          )}
+          )} */}
         </div>
 
         <div className="flex items-center gap-4">

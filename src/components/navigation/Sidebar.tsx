@@ -39,8 +39,8 @@ export function AppSidebar({ className }: SidebarProps) {
       icon: LayoutDashboard,
     },
     {
-      title: "Projets",
-      url: "/projets",
+      title: "Kanban",
+      url: currentProject ? `/projets/${currentProject.id}/kanban` : "",
       icon: FolderKanban,
     },
     {
