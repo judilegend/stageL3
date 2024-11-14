@@ -125,14 +125,56 @@ GroupMessage.init(
 
 // Set up associations
 // Update associations with clear aliases
-Room.belongsToMany(User, { through: RoomMember, as: "members" });
-User.belongsToMany(Room, { through: RoomMember, as: "rooms" });
-Room.belongsTo(User, { as: "creator", foreignKey: "created_by" });
+// Room.belongsToMany(User, { through: RoomMember, as: "members" });
+// User.belongsToMany(Room, { through: RoomMember, as: "rooms" });
+// Room.belongsTo(User, { as: "creator", foreignKey: "created_by" });
 
-RoomMember.belongsTo(User, { foreignKey: "user_id" });
-RoomMember.belongsTo(Room, { foreignKey: "room_id" });
-GroupMessage.belongsTo(Room, { foreignKey: "room_id" });
-GroupMessage.belongsTo(User, { as: "sender", foreignKey: "sender_id" });
-Room.hasMany(GroupMessage, { foreignKey: "room_id" });
+// RoomMember.belongsTo(User, { foreignKey: "user_id" });
+// RoomMember.belongsTo(Room, { foreignKey: "room_id" });
+// GroupMessage.belongsTo(Room, { foreignKey: "room_id" });
+// GroupMessage.belongsTo(User, { as: "sender", foreignKey: "sender_id" });
+// Room.hasMany(GroupMessage, { foreignKey: "room_id" });
+
+// Update associations with clear aliases
+// First, clear all existing associations
+Room.associations = {};
+User.associations = {};
+
+// Then define the associations with explicit aliases
+Room.belongsToMany(User, {
+  through: RoomMember,
+  as: "members",
+  foreignKey: "room_id",
+  otherKey: "user_id",
+  uniqueKey: "room_member_unique",
+});
+
+User.belongsToMany(Room, {
+  through: RoomMember,
+  as: "rooms",
+  foreignKey: "user_id",
+  otherKey: "room_id",
+  uniqueKey: "room_member_unique",
+});
+
+Room.belongsTo(User, {
+  as: "creator",
+  foreignKey: "created_by",
+});
+
+GroupMessage.belongsTo(Room, {
+  as: "room",
+  foreignKey: "room_id",
+});
+
+GroupMessage.belongsTo(User, {
+  as: "sender",
+  foreignKey: "sender_id",
+});
+
+Room.hasMany(GroupMessage, {
+  as: "messages",
+  foreignKey: "room_id",
+});
 
 export default { Room, RoomMember, GroupMessage };

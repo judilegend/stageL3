@@ -4,27 +4,57 @@ import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-export const MessageList = () => {
+interface Message {
+  id: number;
+  content: string;
+  sender_id: number;
+  createdAt: string;
+  sender: {
+    id: number;
+    username: string;
+  };
+}
+
+export const MessageList: React.FC = () => {
   const {
     messages,
     selectedUser,
     markMessagesAsRead,
     groupMessages,
+    loadRoomMessages,
     selectedRoom,
     isGroupChat,
+    markGroupMessagesAsRead,
   } = useMessages();
+
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, groupMessages]);
 
+  // Handle direct messages
   useEffect(() => {
     if (selectedUser && messages.length > 0) {
-      markMessagesAsRead(selectedUser.id);
+      const timer = setTimeout(() => {
+        markMessagesAsRead(selectedUser.id);
+      }, 1000);
+      return () => clearTimeout(timer);
     }
   }, [selectedUser, messages]);
+
+  // Handle group messages
+  useEffect(() => {
+    if (selectedRoom?.id) {
+      loadRoomMessages(selectedRoom.id);
+      const timer = setTimeout(() => {
+        markGroupMessagesAsRead(selectedRoom.id);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedRoom?.id]);
 
   if (!selectedUser && !selectedRoom) {
     return (
@@ -36,9 +66,14 @@ export const MessageList = () => {
     );
   }
 
-  const currentMessages = isGroupChat ? groupMessages : messages;
+  // Use a Set to keep only unique messages by their `id`
+  const uniqueMessages = Array.from(
+    new Map(
+      (isGroupChat ? groupMessages : messages).map((msg) => [msg.id, msg])
+    ).values()
+  );
 
-  if (currentMessages.length === 0) {
+  if (uniqueMessages.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50">
         <div className="text-center text-gray-500">
@@ -52,8 +87,8 @@ export const MessageList = () => {
     );
   }
 
-  const groupMessagesByDate = (messages: any[]) => {
-    const groups: { [key: string]: any[] } = {};
+  const groupMessagesByDate = (messages: Message[]) => {
+    const groups: { [key: string]: Message[] } = {};
     messages.forEach((message) => {
       const date = format(new Date(message.createdAt), "MMMM d, yyyy");
       if (!groups[date]) {
@@ -64,7 +99,7 @@ export const MessageList = () => {
     return groups;
   };
 
-  const groupedMessages = groupMessagesByDate(currentMessages);
+  const groupedMessages = groupMessagesByDate(uniqueMessages);
 
   return (
     <ScrollArea className="flex-1 p-4">
@@ -94,7 +129,7 @@ export const MessageList = () => {
                     }`}
                   >
                     {isGroupChat && message.sender_id !== user?.id && (
-                      <p className="text-xs font-medium mb-1">
+                      <p className="text-xs font-medium mb-1 text-gray-600">
                         {message.sender.username}
                       </p>
                     )}

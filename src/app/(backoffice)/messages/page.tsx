@@ -6,7 +6,6 @@ import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { MessageHeader } from "@/components/messages/MessageHeader";
 import { useAuth } from "@/contexts/AuthContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function MessagesPage() {
   const { user } = useAuth();

@@ -25,22 +25,36 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [roomName, setRoomName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
-  // const { rooms = [] } = useMessages();
 
   const {
     setSelectedUser,
-    selectedConversation,
     unreadCounts,
+    unreadGroupCounts,
     rooms = [],
     setSelectedRoom,
     createRoom,
     isGroupChat,
     setIsGroupChat,
+    loadRoomMessages,
+    loadUnreadGroupCounts,
+    markGroupMessagesAsRead,
+    selectedRoom,
   } = useMessages();
 
+  // Load users and keep unread counts updated
   useEffect(() => {
     fetchUsers();
+
+    // Load unread counts when room selection changes
+    // if (!selectedRoom) {
+    //   loadUnreadGroupCounts();
+    // }
   }, []);
+  useEffect(() => {
+    if (!selectedRoom && isGroupChat) {
+      loadUnreadGroupCounts();
+    }
+  }, [selectedRoom, isGroupChat]);
 
   const fetchUsers = async () => {
     try {
@@ -60,13 +74,17 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
     user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleRoomSelect = (room: Room) => {
+    setSelectedRoom(room);
+    setIsGroupChat(true);
+    loadRoomMessages(room.id);
+    markGroupMessagesAsRead(room.id);
+  };
+
   const handleCreateRoom = async () => {
     if (roomName && selectedMembers.length > 0) {
       try {
-        // Make sure members is an array of numbers
-        const membersArray = selectedMembers.map((id) => Number(id));
-
-        await createRoom(roomName, membersArray);
+        await createRoom(roomName, selectedMembers.map(Number));
         setIsCreatingRoom(false);
         setRoomName("");
         setSelectedMembers([]);
@@ -78,6 +96,7 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
 
   return (
     <div className="w-80 border-r bg-gray-50 flex flex-col h-full">
+      {/* Header section */}
       <div className="p-4 border-b bg-white space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Messages</h2>
@@ -146,43 +165,53 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
             <TabsTrigger value="groups">
               <Users className="h-4 w-4 mr-2" />
               Groups
+              {Object.values(unreadGroupCounts).reduce((a, b) => a + b, 0) >
+                0 && (
+                <Badge variant="destructive" className="ml-2">
+                  {Object.values(unreadGroupCounts).reduce((a, b) => a + b, 0)}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
+      {/* List section */}
       <div className="flex-1 overflow-y-auto">
         {isGroupChat ? (
-          // Group List
           <div className="space-y-1 p-2">
-            {Array.isArray(rooms) &&
-              rooms.map((room) => (
-                <Button
-                  key={`room-${room.id}`} // Added unique key
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => setSelectedRoom(room)}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Users className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-medium">{room.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {room.members?.length || 0} members
-                      </p>
-                    </div>
+            {rooms.map((room) => (
+              <Button
+                key={`room-${room.id}`}
+                variant={selectedRoom?.id === room.id ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => handleRoomSelect(room)}
+              >
+                <div className="flex items-center space-x-3 w-full">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Users className="h-5 w-5 text-blue-600" />
                   </div>
-                </Button>
-              ))}
+                  <div className="flex-1 text-left">
+                    <p className="font-medium">{room.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {room.members?.length || 0} members
+                    </p>
+                  </div>
+                  {unreadGroupCounts[room.id] > 0 &&
+                    selectedRoom?.id !== room.id && (
+                      <Badge variant="destructive" className="ml-2">
+                        {unreadGroupCounts[room.id]}
+                      </Badge>
+                    )}
+                </div>
+              </Button>
+            ))}
           </div>
         ) : (
-          // Direct Messages List
           <div className="space-y-1 p-2">
             {filteredUsers.map((user) => (
               <Button
-                key={`user-${user.id}`} // Added unique key
+                key={`user-${user.id}`}
                 variant="ghost"
                 className="w-full justify-start"
                 onClick={() => setSelectedUser(user)}

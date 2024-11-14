@@ -74,6 +74,7 @@ interface MessageContextType {
   unreadGroupCounts: { [key: number]: number };
   markGroupMessagesAsRead: (roomId: number) => Promise<void>;
   loadUnreadGroupCounts: () => Promise<void>;
+  setGroupMessages: React.Dispatch<React.SetStateAction<GroupMessage[]>>;
 }
 
 const MessageContext = createContext<MessageContextType | undefined>(undefined);
@@ -82,8 +83,6 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const { token } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
-
-  // Direct Message States
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<
     number | null
@@ -92,8 +91,6 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
   const [unreadCounts, setUnreadCounts] = useState<{ [key: number]: number }>(
     {}
   );
-
-  // Group Message States
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [groupMessages, setGroupMessages] = useState<GroupMessage[]>([]);
@@ -102,90 +99,99 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     [key: number]: number;
   }>({});
 
-  // Add this to the socket event listeners
-  useEffect(() => {
-    if (socket) {
-      socket.on("room_created", (newRoom: Room) => {
-        setRooms((prev) => [...prev, newRoom]);
-      });
-
-      socket.on("added_to_room", (room: Room) => {
-        setRooms((prev) => [...prev, room]);
-      });
-
-      return () => {
-        socket.off("room_created");
-        socket.off("added_to_room");
-      };
-    }
-  }, [socket]);
-
+  // Establish socket connection with token authentication
   useEffect(() => {
     if (token) {
-      loadUnreadCounts();
-      // loadUnreadGroupCounts();
-      loadUserRooms();
-      const newSocket = io("http://localhost:5000", {
-        auth: { token },
-      });
+      const newSocket = io("http://localhost:5000", { auth: { token } });
       setSocket(newSocket);
-
+      loadInitialData();
       return () => {
         newSocket.close();
       };
     }
   }, [token]);
 
+  const loadInitialData = async () => {
+    await Promise.all([
+      loadUnreadCounts(),
+      loadUnreadGroupCounts(),
+      loadUserRooms(),
+    ]);
+  };
+
+  // Manage socket events for real-time updates
+
   useEffect(() => {
-    if (socket) {
-      socket.on("user_status_change", ({ userId, isOnline }) => {
+    if (!socket) return;
+
+    const socketHandlers = {
+      user_status_change: ({
+        userId,
+        isOnline,
+      }: {
+        userId: number;
+        isOnline: boolean;
+      }) => {
         setOnlineUsers((prev) =>
           isOnline ? [...prev, userId] : prev.filter((id) => id !== userId)
         );
-      });
-
-      socket.on("online_users", (onlineUserIds: number[]) => {
+      },
+      online_users: (onlineUserIds: number[]) => {
         setOnlineUsers(onlineUserIds);
-      });
-
-      // Direct Message Handlers
-      socket.on("new_message", (message: Message) => {
+      },
+      new_message: (message: Message) => {
         setMessages((prev) => [...prev, message]);
         loadUnreadCounts();
-      });
-
-      socket.on("messages_read", () => {
+      },
+      messages_read: () => {
         loadUnreadCounts();
-      });
+      },
+      new_group_message: (message: GroupMessage) => {
+        console.log("Received new group message:", message);
+        setGroupMessages((prev) => {
+          // Always update messages for the current room
+          if (selectedRoom?.id === message.room_id) {
+            const exists = prev.some((m) => m.id === message.id);
+            if (!exists) {
+              console.log("Adding new message to current room");
+              return [...prev, message].sort(
+                (a, b) =>
+                  new Date(a.createdAt).getTime() -
+                  new Date(b.createdAt).getTime()
+              );
+            }
+          }
+          return prev;
+        });
 
-      // Group Message Handlers
-      socket.on("new_group_message", (message: GroupMessage) => {
-        if (selectedRoom?.id === message.room_id) {
-          setGroupMessages((prev) => [...prev, message]);
+        // Update unread counts for other rooms
+        if (selectedRoom?.id !== message.room_id) {
+          console.log("Updating unread counts for other rooms");
+          loadUnreadGroupCounts();
         }
-        loadUnreadGroupCounts();
-      });
-
-      socket.on("room_created", (room: Room) => {
+      },
+      room_created: (room: Room) => {
         setRooms((prev) => [...prev, room]);
-      });
+      },
+      joined_room: ({ roomId }: { roomId: number }) => {
+        if (selectedRoom?.id === roomId) {
+          loadRoomMessages(roomId);
+        }
+      },
+    };
 
-      socket.on("group_messages_read", ({ roomId }) => {
-        loadUnreadGroupCounts();
-      });
+    // Register all socket event listeners
+    Object.entries(socketHandlers).forEach(([event, handler]) => {
+      socket.on(event, handler);
+    });
 
-      return () => {
-        socket.off("user_status_change");
-        socket.off("online_users");
-        socket.off("new_message");
-        socket.off("messages_read");
-        socket.off("new_group_message");
-        socket.off("room_created");
-        socket.off("group_messages_read");
-      };
-    }
+    return () => {
+      // Cleanup all socket event listeners
+      Object.keys(socketHandlers).forEach((event) => {
+        socket.off(event);
+      });
+    };
   }, [socket, selectedRoom]);
-
   // Direct Message Functions
   const loadUnreadCounts = async () => {
     try {
@@ -250,13 +256,19 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
       const response = await fetch(
         "http://localhost:5000/api/groups/rooms/unread-count",
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
       );
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setUnreadGroupCounts(data);
     } catch (error) {
       console.error("Failed to load unread group counts:", error);
+      setUnreadGroupCounts({});
     }
   };
 
@@ -300,17 +312,10 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
           "Content-Type": "application/json",
         },
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to load rooms");
-      }
-
       const data = await response.json();
       setRooms(data);
     } catch (error) {
       console.error("Failed to load rooms:", error);
-      // Optionally handle the error in the UI
     }
   };
 
@@ -328,17 +333,22 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
       console.error("Failed to load room messages:", error);
     }
   };
-
   const sendGroupMessage = async (roomId: number, content: string) => {
     try {
-      await fetch(`http://localhost:5000/api/groups/rooms/${roomId}/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ content }),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/groups/rooms/${roomId}/messages`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ content }),
+        }
+      );
+      const newMessage = await response.json();
+      setGroupMessages((prev) => [...prev, newMessage]);
+      socket?.emit("group_message", { roomId, message: newMessage });
     } catch (error) {
       console.error("Failed to send group message:", error);
     }
@@ -355,20 +365,24 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleSelectRoom = (room: Room | null) => {
+  // Room selection handler
+  // Handle room selection
+  const handleSelectRoom = async (room: Room | null) => {
+    if (room) {
+      socket?.emit("join_room", room.id);
+      await Promise.all([
+        loadRoomMessages(room.id),
+        markGroupMessagesAsRead(room.id),
+      ]);
+    }
     setSelectedRoom(room);
     setSelectedUser(null);
     setIsGroupChat(true);
-    if (room) {
-      loadRoomMessages(room.id);
-      markGroupMessagesAsRead(room.id);
-    }
   };
 
   return (
     <MessageContext.Provider
       value={{
-        // Direct Message Values
         messages,
         sendMessage,
         selectedConversation,
@@ -380,8 +394,6 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
         loadUnreadCounts,
         setSelectedUser: handleSelectUser,
         onlineUsers,
-
-        // Group Message Values
         rooms,
         selectedRoom,
         groupMessages,
@@ -391,6 +403,7 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
         loadRoomMessages,
         loadUserRooms,
         isGroupChat,
+        setGroupMessages,
         setIsGroupChat,
         unreadGroupCounts,
         markGroupMessagesAsRead,

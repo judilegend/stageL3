@@ -32,17 +32,22 @@ class GroupMessageService {
     return roomWithDetails;
   }
 
-  async addMembersToRoom(roomId: number, userIds: number[]) {
-    const members = userIds.map((userId) => ({
-      room_id: roomId,
-      user_id: userId,
-    }));
-    await RoomMember.bulkCreate(members);
-
-    const room = await this.getRoomDetails(roomId);
-    userIds.forEach((userId) => {
-      io.to(`user:${userId}`).emit("added_to_room", room);
+  async getRoomDetails(roomId: number) {
+    const room = await Room.findByPk(roomId, {
+      include: [
+        {
+          model: User,
+          through: RoomMember,
+          attributes: ["id", "username", "is_online"],
+        },
+        {
+          model: User,
+          as: "creator",
+          attributes: ["id", "username"],
+        },
+      ],
     });
+    return room;
   }
 
   async getRoomMessages(roomId: number) {
@@ -78,19 +83,12 @@ class GroupMessageService {
       ],
     });
 
-    const roomMembers = await RoomMember.findAll({
-      where: { room_id: roomId },
-    });
-
-    roomMembers.forEach((member) => {
-      io.to(`user:${member.user_id}`).emit(
-        "new_group_message",
-        messageWithDetails
-      );
-    });
+    console.log("Emitting new group message to room:", roomId);
+    io.to(`room:${roomId}`).emit("new_group_message", messageWithDetails);
 
     return messageWithDetails;
   }
+
   async getUserRooms(userId: number) {
     try {
       const rooms = await Room.findAll({
@@ -135,40 +133,59 @@ class GroupMessageService {
       throw error;
     }
   }
-
   async getUnreadGroupMessagesCount(userId: number) {
-    const unreadCounts = await GroupMessage.findAll({
-      attributes: [
-        "room_id",
-        [sequelize.fn("COUNT", sequelize.col("id")), "count"],
-      ],
-      include: [
-        {
-          model: Room,
-          required: true,
-          include: [
-            {
-              model: User,
-              through: RoomMember,
-              where: { id: userId },
-              attributes: [],
-            },
-          ],
+    try {
+      const unreadCounts = await GroupMessage.findAll({
+        attributes: [
+          ["room_id", "room_id"],
+          [sequelize.fn("COUNT", sequelize.col("GroupMessage.id")), "count"],
+        ],
+        include: [
+          {
+            model: Room,
+            as: "room",
+            required: true,
+            include: [
+              {
+                model: User,
+                as: "members",
+                through: RoomMember,
+                where: { id: userId },
+                attributes: [],
+              },
+            ],
+          },
+        ],
+        where: {
+          read: false,
+          sender_id: { [Op.ne]: userId },
         },
-      ],
-      where: {
-        read: false,
-        sender_id: { [Op.ne]: userId },
-      },
-      group: ["room_id"],
-    });
+        group: ["GroupMessage.room_id", "room.id"],
+      });
 
-    const countsMap: { [key: number]: number } = {};
-    unreadCounts.forEach((result: any) => {
-      countsMap[result.room_id] = parseInt(result.getDataValue("count"));
-    });
+      const countsMap: { [key: number]: number } = {};
+      unreadCounts.forEach((result: any) => {
+        countsMap[result.room_id] = parseInt(result.getDataValue("count"));
+      });
 
-    return countsMap;
+      return countsMap;
+    } catch (error) {
+      console.error("Error in getUnreadGroupMessagesCount:", error);
+      throw error;
+    }
+  }
+
+  async addMembersToRoom(roomId: number, userIds: number[]) {
+    const members = userIds.map((userId) => ({
+      room_id: roomId,
+      user_id: userId,
+    }));
+    await RoomMember.bulkCreate(members);
+
+    const room = await this.getRoomDetails(roomId);
+    userIds.forEach((userId) => {
+      io.to(`user:${userId}`).emit("added_to_room", room);
+    });
   }
 
   async markGroupMessagesAsRead(roomId: number, userId: number) {

@@ -86,15 +86,13 @@ class GroupMessageController {
   //   }
   // }
 
-  async getRoomMessages(req: Request, res: Response) {
+  async getRoomDetails(req: Request, res: Response) {
     try {
       const { roomId } = req.params;
-      const messages = await groupMessageService.getRoomMessages(
-        parseInt(roomId)
-      );
-      res.status(200).json(messages);
+      const room = await groupMessageService.getRoomDetails(parseInt(roomId));
+      res.status(200).json(room);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch room messages" });
+      res.status(500).json({ error: "Failed to fetch room details" });
     }
   }
 
@@ -127,10 +125,16 @@ class GroupMessageController {
         await groupMessageService.getUnreadGroupMessagesCount(userId);
       res.status(200).json(unreadCounts);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch unread counts" });
+      console.error("Error getting unread counts:", error);
+      res.status(500).json({
+        error: "Failed to fetch unread counts",
+        details:
+          process.env.NODE_ENV === "development" && error instanceof Error
+            ? error.message
+            : undefined,
+      });
     }
   }
-
   async markGroupMessagesAsRead(
     req: Request & { user?: { id: string } },
     res: Response
@@ -156,6 +160,17 @@ class GroupMessageController {
       res.status(200).json({ message: "Members added successfully" });
     } catch (error) {
       res.status(500).json({ error: "Failed to add members" });
+    }
+  }
+  async getRoomMessages(req: Request, res: Response) {
+    try {
+      const { roomId } = req.params;
+      const messages = await groupMessageService.getRoomMessages(
+        parseInt(roomId)
+      );
+      res.status(200).json(messages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch room messages" });
     }
   }
 
