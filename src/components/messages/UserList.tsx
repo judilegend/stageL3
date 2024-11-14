@@ -38,6 +38,7 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
     loadRoomMessages,
     loadUnreadGroupCounts,
     markGroupMessagesAsRead,
+    loadUserRooms,
     selectedRoom,
   } = useMessages();
 
@@ -54,6 +55,7 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
     if (!selectedRoom && isGroupChat) {
       loadUnreadGroupCounts();
     }
+    // console.log("selectedRoom:", room.members);
   }, [selectedRoom, isGroupChat]);
 
   const fetchUsers = async () => {
@@ -84,10 +86,12 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
   const handleCreateRoom = async () => {
     if (roomName && selectedMembers.length > 0) {
       try {
-        await createRoom(roomName, selectedMembers.map(Number));
+        await createRoom(roomName, selectedMembers);
         setIsCreatingRoom(false);
         setRoomName("");
         setSelectedMembers([]);
+        // Reload rooms after creation
+        loadUserRooms();
       } catch (error) {
         console.error("Error creating room:", error);
       }
@@ -193,9 +197,9 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
                   </div>
                   <div className="flex-1 text-left">
                     <p className="font-medium">{room.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {room.members?.length || 0} members
-                    </p>
+                    {/* <p className="text-sm text-gray-500"> */}
+                    {/* {room.members?.length || 0} members */}
+                    {/* </p> */}
                   </div>
                   {unreadGroupCounts[room.id] > 0 &&
                     selectedRoom?.id !== room.id && (

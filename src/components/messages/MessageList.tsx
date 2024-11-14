@@ -69,7 +69,10 @@ export const MessageList: React.FC = () => {
   // Use a Set to keep only unique messages by their `id`
   const uniqueMessages = Array.from(
     new Map(
-      (isGroupChat ? groupMessages : messages).map((msg) => [msg.id, msg])
+      ((isGroupChat ? groupMessages : messages) || []).map((msg) => [
+        msg.id,
+        msg,
+      ])
     ).values()
   );
 

@@ -145,8 +145,7 @@ Room.belongsToMany(User, {
   through: RoomMember,
   as: "members",
   foreignKey: "room_id",
-  otherKey: "user_id",
-  uniqueKey: "room_member_unique",
+  onDelete: "CASCADE",
 });
 
 User.belongsToMany(Room, {
@@ -175,6 +174,7 @@ GroupMessage.belongsTo(User, {
 Room.hasMany(GroupMessage, {
   as: "messages",
   foreignKey: "room_id",
+  onDelete: "CASCADE",
 });
 
 export default { Room, RoomMember, GroupMessage };

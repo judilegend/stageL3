@@ -328,11 +328,13 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
         }
       );
       const data = await response.json();
-      setGroupMessages(data);
+      setGroupMessages(data || []); // Ensure we always set an array
     } catch (error) {
       console.error("Failed to load room messages:", error);
+      setGroupMessages([]); // Set empty array on error
     }
   };
+
   const sendGroupMessage = async (roomId: number, content: string) => {
     try {
       const response = await fetch(

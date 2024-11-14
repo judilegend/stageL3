@@ -15,20 +15,13 @@ class GroupMessageService {
       include: [
         {
           model: User,
-          through: {
-            attributes: [],
-          },
+          as: "members",
           attributes: ["id", "username"],
-        },
-        {
-          model: User,
-          as: "creator",
-          attributes: ["id", "username"],
+          through: { attributes: [] },
         },
       ],
     });
 
-    io.emit("room_created", roomWithDetails);
     return roomWithDetails;
   }
 
