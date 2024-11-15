@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import DirectMessage from "../models/message";
+import PieceJointe from "../models/piece_jointe";
 import User from "../models/user";
 import { io } from "../server";
 import sequelize from "../config/database";
@@ -8,7 +9,8 @@ class MessageService {
   async createDirectMessage(
     senderId: number,
     receiverId: number,
-    content: string
+    content: string,
+    file?: any
   ) {
     const message = await DirectMessage.create({
       sender_id: senderId,
@@ -16,10 +18,26 @@ class MessageService {
       content,
     });
 
+    if (file) {
+      const filePath = file.mimetype.startsWith("image/")
+        ? `/images/${file.filename}`
+        : `/files/${file.filename}`;
+
+      await PieceJointe.create({
+        messageId: message.id,
+        filename: file.filename,
+        originalName: file.originalname,
+        path: filePath,
+        mimetype: file.mimetype,
+        size: file.size,
+      });
+    }
+
     const messageWithDetails = await DirectMessage.findByPk(message.id, {
       include: [
         { model: User, as: "sender", attributes: ["id", "username"] },
         { model: User, as: "receiver", attributes: ["id", "username"] },
+        { model: PieceJointe, as: "attachments" },
       ],
     });
 
@@ -29,6 +47,7 @@ class MessageService {
 
     return messageWithDetails;
   }
+
   // async getUnreadMessagesCount(userId: number) {
   //   const count = await DirectMessage.count({
   //     where: {
@@ -63,6 +82,7 @@ class MessageService {
       include: [
         { model: User, as: "sender", attributes: ["id", "username"] },
         { model: User, as: "receiver", attributes: ["id", "username"] },
+        { model: PieceJointe, as: "attachments" },
       ],
       order: [["created_at", "ASC"]],
     });

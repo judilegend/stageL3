@@ -3,6 +3,7 @@ import { useMessages } from "@/contexts/MessageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { FileIcon } from "lucide-react";
 
 interface Message {
   id: number;
@@ -13,6 +14,14 @@ interface Message {
     id: number;
     username: string;
   };
+  attachments?: {
+    id: number;
+    filename: string;
+    originalName: string;
+    path: string;
+    mimetype: string;
+    size: number;
+  }[];
 }
 
 export const MessageList: React.FC = () => {
@@ -30,12 +39,10 @@ export const MessageList: React.FC = () => {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, groupMessages]);
 
-  // Handle direct messages
   useEffect(() => {
     if (selectedUser && messages.length > 0) {
       const timer = setTimeout(() => {
@@ -45,7 +52,6 @@ export const MessageList: React.FC = () => {
     }
   }, [selectedUser, messages]);
 
-  // Handle group messages
   useEffect(() => {
     if (selectedRoom?.id) {
       loadRoomMessages(selectedRoom.id);
@@ -55,6 +61,101 @@ export const MessageList: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [selectedRoom?.id]);
+
+  const renderAttachment = (attachment: Message["attachments"][0]) => {
+    if (attachment.mimetype.startsWith("image/")) {
+      return (
+        <img
+          src={`http://localhost:5000${attachment.path}`}
+          alt={attachment.originalName}
+          className="max-w-full rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+          loading="lazy"
+          onClick={() =>
+            window.open(`http://localhost:5000${attachment.path}`, "_blank")
+          }
+        />
+      );
+    }
+
+    return (
+      <a
+        href={`http://localhost:5000${attachment.path}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center space-x-2 bg-gray-100 p-2 rounded hover:bg-gray-200 transition-colors"
+      >
+        <FileIcon className="h-4 w-4" />
+        <span className="text-sm text-blue-600 hover:underline">
+          {attachment.originalName}
+        </span>
+      </a>
+    );
+  };
+
+  const renderMessage = (message: Message) => {
+    const isCurrentUser = message.sender_id === user?.id;
+
+    return (
+      <div
+        key={message.id}
+        className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+      >
+        <div
+          className={`max-w-[70%] rounded-lg p-3 ${
+            isCurrentUser
+              ? "bg-blue-500 text-white rounded-br-none"
+              : "bg-gray-100 rounded-bl-none"
+          }`}
+        >
+          {isGroupChat && !isCurrentUser && (
+            <p
+              className={`text-xs font-medium mb-1 ${
+                isCurrentUser ? "text-white" : "text-gray-600"
+              }`}
+            >
+              {message.sender.username}
+            </p>
+          )}
+
+          {message.content && (
+            <p className="text-sm whitespace-pre-wrap break-words">
+              {message.content}
+            </p>
+          )}
+
+          {message.attachments && message.attachments.length > 0 && (
+            <div className="mt-2 space-y-2">
+              {message.attachments.map((attachment) => (
+                <div key={attachment.id} className="max-w-sm">
+                  {renderAttachment(attachment)}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <span
+            className={`text-xs ${
+              isCurrentUser ? "text-white/70" : "text-gray-500"
+            } mt-1 block`}
+          >
+            {format(new Date(message.createdAt), "HH:mm")}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  const groupMessagesByDate = (messages: Message[]) => {
+    const groups: { [key: string]: Message[] } = {};
+    messages.forEach((message) => {
+      const date = format(new Date(message.createdAt), "MMMM d, yyyy");
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(message);
+    });
+    return groups;
+  };
 
   if (!selectedUser && !selectedRoom) {
     return (
@@ -66,7 +167,6 @@ export const MessageList: React.FC = () => {
     );
   }
 
-  // Use a Set to keep only unique messages by their `id`
   const uniqueMessages = Array.from(
     new Map(
       ((isGroupChat ? groupMessages : messages) || []).map((msg) => [
@@ -90,18 +190,6 @@ export const MessageList: React.FC = () => {
     );
   }
 
-  const groupMessagesByDate = (messages: Message[]) => {
-    const groups: { [key: string]: Message[] } = {};
-    messages.forEach((message) => {
-      const date = format(new Date(message.createdAt), "MMMM d, yyyy");
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(message);
-    });
-    return groups;
-  };
-
   const groupedMessages = groupMessagesByDate(uniqueMessages);
 
   return (
@@ -115,36 +203,7 @@ export const MessageList: React.FC = () => {
               </span>
             </div>
             <div className="space-y-4">
-              {dateMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.sender_id === user?.id
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[70%] rounded-lg p-3 ${
-                      message.sender_id === user?.id
-                        ? "bg-blue-500 text-white rounded-br-none"
-                        : "bg-gray-100 rounded-bl-none"
-                    }`}
-                  >
-                    {isGroupChat && message.sender_id !== user?.id && (
-                      <p className="text-xs font-medium mb-1 text-gray-600">
-                        {message.sender.username}
-                      </p>
-                    )}
-                    <p className="text-sm whitespace-pre-wrap break-words">
-                      {message.content}
-                    </p>
-                    <span className="text-xs opacity-70 mt-1 block">
-                      {format(new Date(message.createdAt), "HH:mm")}
-                    </span>
-                  </div>
-                </div>
-              ))}
+              {dateMessages.map((message) => renderMessage(message))}
             </div>
           </div>
         ))}

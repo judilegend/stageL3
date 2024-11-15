@@ -1,6 +1,7 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
 import User from "./user";
+import PieceJointe from "./piece_jointe";
 
 class DirectMessage extends Model {
   public id!: number;
@@ -54,5 +55,9 @@ DirectMessage.init(
 
 DirectMessage.belongsTo(User, { as: "sender", foreignKey: "sender_id" });
 DirectMessage.belongsTo(User, { as: "receiver", foreignKey: "receiver_id" });
+DirectMessage.hasMany(PieceJointe, {
+  foreignKey: "messageId",
+  as: "attachments",
+});
 
 export default DirectMessage;

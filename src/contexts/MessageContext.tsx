@@ -18,6 +18,14 @@ interface Message {
   sender: {
     username: string;
   };
+  attachments?: {
+    id: number;
+    filename: string;
+    originalName: string;
+    path: string;
+    mimetype: string;
+    size: number;
+  }[];
 }
 
 interface Room {
@@ -51,6 +59,11 @@ interface MessageContextType {
   messages: Message[];
   sendMessage: (receiverId: number, content: string) => Promise<void>;
   selectedConversation: number | null;
+  sendMessageWithAttachment: (
+    receiverId: number,
+    content: string,
+    file: File
+  ) => Promise<void>;
   setSelectedConversation: (userId: number | null) => void;
   loadConversation: (userId: number) => Promise<void>;
   selectedUser: User | null;
@@ -234,6 +247,35 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
       console.error("Failed to send message:", error);
     }
   };
+  const sendMessageWithAttachment = async (
+    receiverId: number,
+    content: string,
+    file: File
+  ) => {
+    try {
+      const formData = new FormData();
+      formData.append("receiverId", receiverId.toString());
+      formData.append("content", content);
+      formData.append("file", file);
+
+      const response = await fetch(
+        "http://localhost:5000/api/messages/direct",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to send message with attachment");
+      }
+    } catch (error) {
+      console.error("Failed to send message with attachment:", error);
+    }
+  };
 
   const loadConversation = async (userId: number) => {
     try {
@@ -387,6 +429,7 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
       value={{
         messages,
         sendMessage,
+        sendMessageWithAttachment,
         selectedConversation,
         setSelectedConversation,
         loadConversation,

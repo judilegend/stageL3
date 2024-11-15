@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useMessages } from "@/contexts/MessageContext";
 import { Search, MessageCircle, Users, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,8 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [roomName, setRoomName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     setSelectedUser,
@@ -40,6 +42,7 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
     markGroupMessagesAsRead,
     loadUserRooms,
     selectedRoom,
+    sendMessageWithAttachment,
   } = useMessages();
 
   // Load users and keep unread counts updated
@@ -47,9 +50,9 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
     fetchUsers();
 
     // Load unread counts when room selection changes
-    // if (!selectedRoom) {
-    //   loadUnreadGroupCounts();
-    // }
+    if (!selectedRoom) {
+      loadUnreadGroupCounts();
+    }
   }, []);
   useEffect(() => {
     if (!selectedRoom && isGroupChat) {
@@ -58,6 +61,21 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
     // console.log("selectedRoom:", room.members);
   }, [selectedRoom, isGroupChat]);
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+  const handleSendMessage = async (content: string) => {
+    if (selectedFile && selectedUser) {
+      await sendMessageWithAttachment(selectedUser.id, content, selectedFile);
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
   const fetchUsers = async () => {
     try {
       const response = await fetch("http://localhost:5000/api/user", {

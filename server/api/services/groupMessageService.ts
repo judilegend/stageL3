@@ -5,6 +5,25 @@ import { Op } from "sequelize";
 import sequelize from "../config/database";
 
 class GroupMessageService {
+  // async createRoom(name: string, createdBy: number) {
+  //   const room = await Room.create({
+  //     name,
+  //     created_by: createdBy,
+  //   });
+
+  //   const roomWithDetails = await Room.findByPk(room.id, {
+  //     include: [
+  //       {
+  //         model: User,
+  //         as: "members",
+  //         attributes: ["id", "username"],
+  //         through: { attributes: [] },
+  //       },
+  //     ],
+  //   });
+
+  //   return roomWithDetails;
+  // }
   async createRoom(name: string, createdBy: number) {
     const room = await Room.create({
       name,
@@ -16,13 +35,38 @@ class GroupMessageService {
         {
           model: User,
           as: "members",
-          attributes: ["id", "username"],
           through: { attributes: [] },
+          attributes: ["id", "username", "is_online"],
+        },
+        {
+          model: User,
+          as: "creator",
+          attributes: ["id", "username"],
         },
       ],
     });
 
+    // Notify all online users about the new room
+    io.emit("room_created", roomWithDetails);
     return roomWithDetails;
+  }
+
+  async addMembersToRoom(roomId: number, userIds: number[]) {
+    const members = userIds.map((userId) => ({
+      room_id: roomId,
+      user_id: userId,
+    }));
+
+    await RoomMember.bulkCreate(members);
+
+    const updatedRoom = await this.getRoomDetails(roomId);
+
+    // Notify each added member individually
+    userIds.forEach((userId) => {
+      io.to(`user:${userId}`).emit("added_to_room", updatedRoom);
+    });
+
+    return updatedRoom;
   }
 
   async getRoomDetails(roomId: number) {
@@ -168,18 +212,18 @@ class GroupMessageService {
     }
   }
 
-  async addMembersToRoom(roomId: number, userIds: number[]) {
-    const members = userIds.map((userId) => ({
-      room_id: roomId,
-      user_id: userId,
-    }));
-    await RoomMember.bulkCreate(members);
+  // async addMembersToRoom(roomId: number, userIds: number[]) {
+  //   const members = userIds.map((userId) => ({
+  //     room_id: roomId,
+  //     user_id: userId,
+  //   }));
+  //   await RoomMember.bulkCreate(members);
 
-    const room = await this.getRoomDetails(roomId);
-    userIds.forEach((userId) => {
-      io.to(`user:${userId}`).emit("added_to_room", room);
-    });
-  }
+  //   const room = await this.getRoomDetails(roomId);
+  //   userIds.forEach((userId) => {
+  //     io.to(`user:${userId}`).emit("added_to_room", room);
+  //   });
+  // }
 
   async markGroupMessagesAsRead(roomId: number, userId: number) {
     await GroupMessage.update(
