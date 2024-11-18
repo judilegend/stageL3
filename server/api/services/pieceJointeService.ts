@@ -2,19 +2,22 @@ import PieceJointe from "../models/piece_jointe";
 
 export const pieceJointeService = {
   async create(data: {
-    activiteId: number;
+    messageId: number;
     filename: string;
     originalName: string;
     path: string;
     mimetype: string;
     size: number;
   }) {
-    return await PieceJointe.create(data);
+    return await PieceJointe.create({
+      ...data,
+      path: `/files/${data.filename}`,
+    });
   },
 
-  async findByActiviteId(activiteId: number) {
+  async findByMessageId(messageId: number) {
     return await PieceJointe.findAll({
-      where: { activiteId },
+      where: { messageId },
     });
   },
 

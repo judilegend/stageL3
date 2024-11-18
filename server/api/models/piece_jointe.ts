@@ -22,6 +22,10 @@ PieceJointe.init(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true,
     },
+    groupMessageId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+    },
     filename: {
       type: DataTypes.STRING,
       allowNull: false,

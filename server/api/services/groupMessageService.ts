@@ -3,6 +3,7 @@ import User from "../models/user";
 import { io } from "../server";
 import { Op } from "sequelize";
 import sequelize from "../config/database";
+import PieceJointe from "../models/piece_jointe";
 
 class GroupMessageService {
   // async createRoom(name: string, createdBy: number) {
@@ -102,13 +103,29 @@ class GroupMessageService {
     return messages;
   }
 
-  async sendGroupMessage(roomId: number, senderId: number, content: string) {
+  async sendGroupMessage(
+    roomId: number,
+    senderId: number,
+    content: string,
+    file?: any
+  ) {
     const message = await GroupMessage.create({
       room_id: roomId,
       sender_id: senderId,
       content,
       read: false,
     });
+
+    if (file) {
+      await PieceJointe.create({
+        groupMessageId: message.id,
+        filename: file.filename,
+        originalName: file.originalname,
+        path: `/files/${file.filename}`,
+        mimetype: file.mimetype,
+        size: file.size,
+      });
+    }
 
     const messageWithDetails = await GroupMessage.findByPk(message.id, {
       include: [
@@ -117,12 +134,14 @@ class GroupMessageService {
           as: "sender",
           attributes: ["id", "username"],
         },
+        {
+          model: PieceJointe,
+          as: "attachments",
+        },
       ],
     });
 
-    console.log("Emitting new group message to room:", roomId);
     io.to(`room:${roomId}`).emit("new_group_message", messageWithDetails);
-
     return messageWithDetails;
   }
 

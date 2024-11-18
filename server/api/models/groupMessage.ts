@@ -1,6 +1,7 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
 import User from "./user";
+import PieceJointe from "./piece_jointe";
 
 export class Room extends Model {
   public id!: number;
@@ -176,5 +177,9 @@ Room.hasMany(GroupMessage, {
   foreignKey: "room_id",
   onDelete: "CASCADE",
 });
-
+GroupMessage.hasMany(PieceJointe, {
+  foreignKey: "groupMessageId",
+  as: "attachments",
+  constraints: false,
+});
 export default { Room, RoomMember, GroupMessage };

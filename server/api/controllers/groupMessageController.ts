@@ -97,20 +97,24 @@ class GroupMessageController {
   }
 
   async sendGroupMessage(
-    req: Request & { user?: { id: string } },
+    req: Request & { user?: { id: string }; file?: any },
     res: Response
   ) {
     try {
       const { roomId } = req.params;
       const { content } = req.body;
       const senderId = parseInt(req.user?.id!);
+
       const message = await groupMessageService.sendGroupMessage(
         parseInt(roomId),
         senderId,
-        content
+        content,
+        req.file
       );
+
       res.status(201).json(message);
     } catch (error) {
+      console.error("Error sending group message:", error);
       res.status(500).json({ error: "Failed to send group message" });
     }
   }

@@ -1,6 +1,7 @@
 import express from "express";
 import groupMessageController from "../controllers/groupMessageController";
 import { authenticate } from "../middleware/authMiddleware";
+import { upload } from "../config/multerConfig";
 
 const router = express.Router();
 
@@ -14,8 +15,11 @@ router.delete("/rooms/:roomId", groupMessageController.deleteRoom);
 
 // Messages
 router.get("/rooms/:roomId/messages", groupMessageController.getRoomMessages);
-router.post("/rooms/:roomId/messages", groupMessageController.sendGroupMessage);
-
+router.post(
+  "/rooms/:roomId/messages",
+  upload.single("file"),
+  groupMessageController.sendGroupMessage
+);
 // Unread messages
 router.get(
   "/rooms/unread-count",

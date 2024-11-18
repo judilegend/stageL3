@@ -41,7 +41,8 @@ const io = new Server(server, {
 });
 
 app.use(express.json());
-app.use("/images", express.static(path.join(__dirname, "./uploads/images")));
+// app.use("/images", express.static(path.join(__dirname, "./uploads/images")));
+// app.use("/files", express.static(path.join(__dirname, "./uploads/files")));
 app.use("/files", express.static(path.join(__dirname, "./uploads/files")));
 
 app.use("/api/auth", authRoutes);

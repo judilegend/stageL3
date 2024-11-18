@@ -1,10 +1,17 @@
 import multer from "multer";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import fs from "fs";
+
+// Création du dossier uploads/files s'il n'existe pas
+const uploadDir = path.join(__dirname, "../uploads/files/");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: (_req: any, _file: any, cb: any) => {
-    cb(null, path.join(__dirname, "../uploads/files/"));
+    cb(null, uploadDir);
   },
   filename: (_req: any, file: any, cb: any) => {
     const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;

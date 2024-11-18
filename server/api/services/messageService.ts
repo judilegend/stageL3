@@ -19,15 +19,11 @@ class MessageService {
     });
 
     if (file) {
-      const filePath = file.mimetype.startsWith("image/")
-        ? `/images/${file.filename}`
-        : `/files/${file.filename}`;
-
       await PieceJointe.create({
         messageId: message.id,
         filename: file.filename,
         originalName: file.originalname,
-        path: filePath,
+        path: `/files/${file.filename}`,
         mimetype: file.mimetype,
         size: file.size,
       });
