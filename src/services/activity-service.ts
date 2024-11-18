@@ -1,9 +1,15 @@
 import { Activity } from "@/types/activity";
-
-// const API_URL =
-//   process.env.NEXT_PUBLIC_API_URL || "http://192.168.88.87:5000/api";
+import Cookies from "js-cookie";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+const getAuthHeaders = () => {
+  const token = Cookies.get("token");
+  return {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+};
 
 export async function getActivitiesByWorkPackageId(
   workPackageId: string
@@ -11,17 +17,20 @@ export async function getActivitiesByWorkPackageId(
   const response = await fetch(
     `${API_URL}/activities/workpackage/${workPackageId}`,
     {
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
+      credentials: "include",
     }
   );
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Failed to fetch activities");
+  if (response.status === 401) {
+    throw new Error("Authentication required");
   }
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to fetch activities");
+  }
+
   return response.json();
 }
 
@@ -30,12 +39,22 @@ export async function createActivity(
 ): Promise<Activity> {
   const response = await fetch(`${API_URL}/activities`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
+    credentials: "include",
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) throw new Error("Failed to create activity");
-  return response.json();
+  const responseData = await response.json();
+
+  if (response.status === 401) {
+    throw new Error("Authentication required");
+  }
+
+  if (!response.ok) {
+    throw new Error(responseData.message || "Failed to create activity");
+  }
+
+  return responseData;
 }
 
 export async function updateActivity(
@@ -44,21 +63,36 @@ export async function updateActivity(
 ): Promise<Activity> {
   const response = await fetch(`${API_URL}/activities/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
+    credentials: "include",
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) throw new Error("Failed to update activity");
+  if (response.status === 401) {
+    throw new Error("Authentication required");
+  }
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to update activity");
+  }
+
   return response.json();
 }
 
 export async function deleteActivity(id: string): Promise<void> {
   const response = await fetch(`${API_URL}/activities/${id}`, {
     method: "DELETE",
+    headers: getAuthHeaders(),
+    credentials: "include",
   });
 
+  if (response.status === 401) {
+    throw new Error("Authentication required");
+  }
+
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Failed to delete activity");
+    const error = await response.json();
+    throw new Error(error.message || "Failed to delete activity");
   }
 }

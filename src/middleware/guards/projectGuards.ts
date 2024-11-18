@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  activityPermissions,
   projectPermissions,
   workPackagePermissions,
 } from "../permissions/projectPermissions";
@@ -46,4 +47,57 @@ export const useWorkPackageGuards = () => {
       return workPackagePermissions.canDelete(user.role);
     },
   };
+};
+
+//activite
+export const useActivityGuards = () => {
+  const { user, isAuthenticated } = useAuth();
+  const allowedRoles = [
+    "admin",
+    "product_owner",
+    "lead_developer",
+    "tech_lead",
+    "scrum_master",
+  ];
+
+  return {
+    canCreateActivity: () => {
+      if (!user || !isAuthenticated) return false;
+      return activityPermissions.canCreate(user.role);
+    },
+
+    canEditActivity: () => {
+      if (!user || !isAuthenticated) return false;
+      return activityPermissions.canEdit(user.role);
+    },
+
+    canDeleteActivity: () => {
+      if (!user || !isAuthenticated) return false;
+      return activityPermissions.canDelete(user.role);
+    },
+  };
+};
+//taches
+
+// import { useAuth } from "@/contexts/AuthContext";
+
+export const useTaskGuards = () => {
+  const { user } = useAuth();
+  const allowedRoles = [
+    "admin",
+    "product_owner",
+    "lead_developer",
+    "tech_lead",
+    "scrum_master",
+  ];
+
+  const canCreateTask = () => {
+    return user && allowedRoles.includes(user.role);
+  };
+
+  const canDeleteTask = () => {
+    return user && allowedRoles.includes(user.role);
+  };
+
+  return { canCreateTask, canDeleteTask };
 };

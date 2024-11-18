@@ -12,12 +12,18 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Task } from "@/types/task";
 import { useTasks } from "@/contexts/TaskContext";
+import { useTaskGuards } from "@/middleware/guards/projectGuards";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TaskCardProps {
   task: Task;
 }
 
 export const TaskCard = memo(function TaskCard({ task }: TaskCardProps) {
+  //definir la permission
+  const { user } = useAuth();
+  const { canDeleteTask } = useTaskGuards();
+
   const { state, updateTask, deleteTask } = useTasks();
   const { users } = state;
 
@@ -113,12 +119,14 @@ export const TaskCard = memo(function TaskCard({ task }: TaskCardProps) {
                   ? "Marquer terminé"
                   : "Marquer à faire"}
               </DropdownMenuItem> */}
-              <DropdownMenuItem
-                onClick={handleDelete}
-                className="text-red-600 focus:text-red-600 focus:bg-red-50"
-              >
-                Supprimer
-              </DropdownMenuItem>
+              {user && canDeleteTask() && (
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                >
+                  Supprimer
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -39,3 +39,27 @@ export const authorizeWorkPackageManagement = (
 
   next();
 };
+
+//activite
+export const authorizeActivityManagement = (
+  req: Request & { user?: any },
+  res: Response,
+  next: NextFunction
+) => {
+  const allowedRoles = [
+    "admin",
+    "product_owner",
+    "lead_developer",
+    "tech_lead",
+    "scrum_master",
+  ];
+
+  if (!req.user || !allowedRoles.includes(req.user.role)) {
+    return res.status(403).json({
+      message:
+        "Access denied. Only authorized team members can manage activities.",
+    });
+  }
+
+  next();
+};

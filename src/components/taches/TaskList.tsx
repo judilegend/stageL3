@@ -6,12 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { TaskModal } from "./TaskModal";
 import { Task } from "@/types/task";
+import { useTaskGuards } from "@/middleware/guards/projectGuards";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TaskListProps {
   activiteId: number;
 }
 
 export function TaskList({ activiteId }: TaskListProps) {
+  //definir la permission
+  const { user } = useAuth();
+  const { canCreateTask } = useTaskGuards();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { state, fetchTasks } = useTasks();
   const { tasksByActivity, loading, error } = state;
@@ -30,12 +36,14 @@ export function TaskList({ activiteId }: TaskListProps) {
   const tasksByStatus: Record<string, Task[]> = {
     todo: activityTasks.filter((task) => task.status === "todo"),
     in_progress: activityTasks.filter((task) => task.status === "in_progress"),
+
     done: activityTasks.filter((task) => task.status === "done"),
   };
 
   const statusLabels = {
     todo: "À faire",
     in_progress: "En cours",
+    in_review: "En revue",
     done: "Terminé",
   };
 
@@ -59,13 +67,15 @@ export function TaskList({ activiteId }: TaskListProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Tâches</h3>
-        <Button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle Tâche
-        </Button>
+        {user && canCreateTask() && (
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle Tâche
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6">

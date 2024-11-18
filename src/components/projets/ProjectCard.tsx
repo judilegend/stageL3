@@ -30,6 +30,8 @@ import { useState } from "react";
 import EditProjectDialog from "./EditProjectDialog";
 import DeleteProjectDialog from "./DeleteProjectDialog";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { useProjectGuards } from "@/middleware/guards/projectGuards";
 
 interface ProjectCardProps {
   project: Project;
@@ -38,6 +40,10 @@ interface ProjectCardProps {
 export default function ProjectCard({ project }: ProjectCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  //definir autorisation
+  const { user } = useAuth();
+
+  const { canEditProject, canDeleteProject } = useProjectGuards();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -86,30 +92,36 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             >
               {getStatusLabel(project.status)}
             </Badge>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover:bg-gray-100"
-                >
-                  <MoreVertical className="h-4 w-4 text-gray-600" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Modifier
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  className="text-red-600 focus:text-red-700 focus:bg-red-50"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Supprimer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {user && (canEditProject() || canDeleteProject()) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-gray-100"
+                  >
+                    <MoreVertical className="h-4 w-4 text-gray-600" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {canEditProject() && (
+                    <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Modifier
+                    </DropdownMenuItem>
+                  )}
+                  {canDeleteProject() && (
+                    <DropdownMenuItem
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                      className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Supprimer
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </CardHeader>

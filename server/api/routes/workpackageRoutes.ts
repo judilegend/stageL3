@@ -13,7 +13,7 @@ router.post(
 );
 router.get(
   "/project/:projectId",
-  authenticate,
+  // authenticate,
   workpackageController.getWorkPackagesByProjectId
 );
 router.put(
