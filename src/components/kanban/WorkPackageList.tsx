@@ -17,12 +17,16 @@ import {
 import { useWorkPackage } from "@/contexts/WorkpackageContext";
 import { useActivity } from "@/contexts/ActivityContext";
 import { DeleteConfirmDialog } from "./DialogConfirmDialog";
+import { useWorkPackageGuards } from "@/middleware/guards/projectGuards";
 
 interface WorkPackageListProps {
   projectId: string;
 }
 
 export function WorkPackageList({ projectId }: WorkPackageListProps) {
+  //permission workpackages
+  const { canCreateWorkPackage } = useWorkPackageGuards();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWorkPackage, setEditingWorkPackage] =
     useState<WorkPackage | null>(null);
@@ -117,13 +121,15 @@ export function WorkPackageList({ projectId }: WorkPackageListProps) {
             </SelectContent>
           </Select>
         </div>
-        <Button
-          onClick={() => setIsModalOpen(true)}
-          className="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau Work Package
-        </Button>
+        {canCreateWorkPackage() && (
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau Work Package
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

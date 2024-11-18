@@ -15,3 +15,29 @@ export const projectPermissions = {
     return role ? allowedRoles.includes(role) : false;
   },
 };
+export const workPackagePermissions = {
+  canCreate: (role?: string) => {
+    const allowedRoles = [
+      "admin",
+      "product_owner",
+      "lead_developer",
+      "tech_lead",
+    ];
+    return role ? allowedRoles.includes(role) : false;
+  },
+
+  canEdit: (role?: string) => {
+    const allowedRoles = [
+      "admin",
+      "product_owner",
+      "lead_developer",
+      "tech_lead",
+    ];
+    return role ? allowedRoles.includes(role) : false;
+  },
+
+  canDelete: (role?: string) => {
+    const allowedRoles = ["admin", "product_owner"];
+    return role ? allowedRoles.includes(role) : false;
+  },
+};

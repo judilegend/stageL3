@@ -2,6 +2,7 @@
 import { createContext, useContext, ReactNode, useState } from "react";
 import { WorkPackage } from "@/types/workpackage";
 import * as workpackageService from "@/services/workpackage-service";
+import { useWorkPackageGuards } from "@/middleware/guards/projectGuards";
 
 interface WorkPackageContextType {
   workPackages: WorkPackage[];
@@ -20,6 +21,8 @@ const WorkPackageContext = createContext<WorkPackageContextType | undefined>(
 
 export function WorkPackageProvider({ children }: { children: ReactNode }) {
   const [workPackages, setWorkPackages] = useState<WorkPackage[]>([]);
+  const { canCreateWorkPackage, canEditWorkPackage, canDeleteWorkPackage } =
+    useWorkPackageGuards();
 
   const fetchWorkPackages = async (projectId: string) => {
     try {
@@ -33,17 +36,29 @@ export function WorkPackageProvider({ children }: { children: ReactNode }) {
   };
 
   const addWorkPackage = async (workPackage: Partial<WorkPackage>) => {
+    const hasPermission = canCreateWorkPackage();
+    console.log("Permission check:", hasPermission); // Debug log
+
+    if (!hasPermission) {
+      throw new Error("Unauthorized to create work package");
+    }
+
     try {
       const newWorkPackage = await workpackageService.createWorkPackage(
         workPackage
       );
       setWorkPackages([...workPackages, newWorkPackage]);
-    } catch (error) {
-      console.error("Error adding workpackage:", error);
+    } catch (error: any) {
+      console.error("Error details:", error.message); // Debug log
+      throw error;
     }
   };
 
   const deleteWorkPackage = async (id: string) => {
+    if (!canDeleteWorkPackage()) {
+      throw new Error("Unauthorized to delete work package");
+    }
+
     try {
       await workpackageService.deleteWorkPackage(id);
       setWorkPackages(workPackages.filter((wp) => wp.id !== id));
@@ -51,11 +66,14 @@ export function WorkPackageProvider({ children }: { children: ReactNode }) {
       console.error("Error deleting workpackage:", error);
     }
   };
-
   const updateWorkPackage = async (
     id: string,
     workPackage: Partial<WorkPackage>
   ) => {
+    if (!canEditWorkPackage()) {
+      throw new Error("Unauthorized to edit work package");
+    }
+
     try {
       const updatedWorkPackage = await workpackageService.updateWorkPackage(
         id,

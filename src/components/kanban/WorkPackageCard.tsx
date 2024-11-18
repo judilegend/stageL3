@@ -24,6 +24,7 @@ import { Activity } from "@/types/activity";
 import { AddActivityForm } from "./AddActivityForm";
 import { EditActivityForm } from "./EditActivityForm";
 import { useActivity } from "@/contexts/ActivityContext";
+import { useWorkPackageGuards } from "@/middleware/guards/projectGuards";
 
 interface WorkPackageCardProps {
   workPackage: WorkPackage;
@@ -38,6 +39,9 @@ export function WorkPackageCard({
   onEdit,
   onDelete,
 }: WorkPackageCardProps) {
+  //permissions pour gestion de work packages
+  const { canEditWorkPackage, canDeleteWorkPackage } = useWorkPackageGuards();
+
   const [isAddingActivity, setIsAddingActivity] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -69,19 +73,25 @@ export function WorkPackageCard({
           <CardTitle className="text-lg font-semibold">
             {workPackage.title}
           </CardTitle>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>Modifier</DropdownMenuItem>
-              <DropdownMenuItem onClick={onDelete} className="text-red-600">
-                Supprimer
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {(canEditWorkPackage() || canDeleteWorkPackage()) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {canEditWorkPackage() && (
+                  <DropdownMenuItem onClick={onEdit}>Modifier</DropdownMenuItem>
+                )}
+                {canDeleteWorkPackage() && (
+                  <DropdownMenuItem onClick={onDelete} className="text-red-600">
+                    Supprimer
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </CardHeader>
 
         <CardContent className="space-y-4">
