@@ -52,12 +52,6 @@ export function AppSidebar({ className }: SidebarProps) {
       requiresProject: true,
     },
     {
-      title: "Gestion des tâches",
-      url: currentProject ? `/projets/${currentProject.id}/taches` : "/taches",
-      icon: ListTodo,
-      requiresProject: true,
-    },
-    {
       title: "Sprints",
       url: currentProject
         ? `/projets/${currentProject.id}/sprints`
@@ -65,6 +59,13 @@ export function AppSidebar({ className }: SidebarProps) {
       icon: Activity,
       requiresProject: true,
     },
+    {
+      title: "Gestion des tâches",
+      url: currentProject ? `/projets/${currentProject.id}/taches` : "/taches",
+      icon: ListTodo,
+      requiresProject: true,
+    },
+
     {
       title: "Messages",
       url: "/messages",
