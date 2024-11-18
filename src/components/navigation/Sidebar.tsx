@@ -18,7 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentProject } from "@/contexts/CurrentProjectContext";
 import CreateProjectDialog from "../projets/CreateProjectDialog";
 import { LoadingSpinner } from "../ui/loading-spinner";
-
+import { Logo } from "../ui/Logo";
 interface SidebarProps {
   className?: string;
 }
@@ -99,7 +99,7 @@ export function AppSidebar({ className }: SidebarProps) {
       <aside className={cn("w-64 bg-white shadow-lg h-screen", className)}>
         <div className="flex h-full flex-col">
           <div className="p-4 border-b text-xl font-semibold mt-4">
-            Dev DepannPC
+            <Logo />{" "}
           </div>
 
           <div className="p-4 mt-2">

@@ -62,7 +62,9 @@ export const MessageList: React.FC = () => {
     }
   }, [selectedRoom?.id]);
 
-  const renderAttachment = (attachment: Message["attachments"][0]) => {
+  const renderAttachment = (
+    attachment: NonNullable<Message["attachments"]>[number]
+  ) => {
     if (attachment.mimetype.startsWith("image/")) {
       return (
         <img
@@ -116,15 +118,9 @@ export const MessageList: React.FC = () => {
               {message.sender.username}
             </p>
           )}
-
-          {message.content && (
-            <p className="text-sm whitespace-pre-wrap break-words">
-              {message.content}
-            </p>
-          )}
-
           {message.attachments && message.attachments.length > 0 && (
             <div className="mt-2 space-y-2">
+              Vous
               {message.attachments.map((attachment) => (
                 <div key={attachment.id} className="max-w-sm">
                   {renderAttachment(attachment)}
@@ -132,7 +128,11 @@ export const MessageList: React.FC = () => {
               ))}
             </div>
           )}
-
+          {message.content && (
+            <p className="text-sm whitespace-pre-wrap break-words">
+              {message.content}
+            </p>
+          )}
           <span
             className={`text-xs ${
               isCurrentUser ? "text-white/70" : "text-gray-500"
@@ -174,7 +174,7 @@ export const MessageList: React.FC = () => {
         msg,
       ])
     ).values()
-  );
+  ) as Message[];
 
   if (uniqueMessages.length === 0) {
     return (

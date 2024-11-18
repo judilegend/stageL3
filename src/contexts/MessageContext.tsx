@@ -64,6 +64,11 @@ interface MessageContextType {
     content: string,
     file: File
   ) => Promise<void>;
+  sendGroupMessageWithAttachment: (
+    roomId: number,
+    content: string,
+    file: File
+  ) => Promise<void>;
   setSelectedConversation: (userId: number | null) => void;
   loadConversation: (userId: number) => Promise<void>;
   selectedUser: User | null;
@@ -397,6 +402,39 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
       console.error("Failed to send group message:", error);
     }
   };
+  const sendGroupMessageWithAttachment = async (
+    roomId: number,
+    content: string,
+    file: File
+  ) => {
+    try {
+      const formData = new FormData();
+      formData.append("content", content);
+      formData.append("file", file);
+
+      const response = await fetch(
+        `http://localhost:5000/api/groups/rooms/${roomId}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to send group message with attachment");
+      }
+
+      const newMessage = await response.json();
+      setGroupMessages((prev) => [...prev, newMessage]);
+    } catch (error) {
+      console.error("Failed to send group message with attachment:", error);
+    }
+  };
+
+  // Ajoutez sendGroupMessageWithAttachment au context
 
   const handleSelectUser = (user: User | null) => {
     setSelectedUser(user);
@@ -430,6 +468,7 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
         messages,
         sendMessage,
         sendMessageWithAttachment,
+        sendGroupMessageWithAttachment,
         selectedConversation,
         setSelectedConversation,
         loadConversation,

@@ -20,6 +20,7 @@ export const MessageInput = () => {
     sendGroupMessage,
     selectedUser,
     selectedRoom,
+    sendGroupMessageWithAttachment,
     isGroupChat,
   } = useMessages();
 
@@ -28,7 +29,19 @@ export const MessageInput = () => {
     if (!message.trim() && !selectedFile) return;
 
     if (isGroupChat && selectedRoom) {
-      await sendGroupMessage(selectedRoom.id, message);
+      if (selectedFile) {
+        await sendGroupMessageWithAttachment(
+          selectedRoom.id,
+          message,
+          selectedFile
+        );
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      } else {
+        await sendGroupMessage(selectedRoom.id, message);
+      }
     } else if (selectedUser) {
       if (selectedFile) {
         await sendMessageWithAttachment(selectedUser.id, message, selectedFile);

@@ -61,21 +61,6 @@ export const UserList = ({ currentUserId }: { currentUserId: number }) => {
     // console.log("selectedRoom:", room.members);
   }, [selectedRoom, isGroupChat]);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
-  };
-  const handleSendMessage = async (content: string) => {
-    if (selectedFile && selectedUser) {
-      await sendMessageWithAttachment(selectedUser.id, content, selectedFile);
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  };
   const fetchUsers = async () => {
     try {
       const response = await fetch("http://localhost:5000/api/user", {
