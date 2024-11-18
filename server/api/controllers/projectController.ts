@@ -1,14 +1,22 @@
 import * as projectService from "../services/projectService";
 import { Request, Response } from "express";
 
-export const createProject = async (req: Request, res: Response) => {
+export const createProject = async (
+  req: Request & { user?: any },
+  res: Response
+) => {
   try {
-    const project = await projectService.createProject(req.body);
+    const projectData = {
+      ...req.body,
+      createdBy: req.user.id,
+    };
+    const project = await projectService.createProject(projectData);
     res.status(201).json(project);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error creating project", error: error.message });
+    res.status(500).json({
+      message: "Error creating project",
+      error: error.message,
+    });
   }
 };
 

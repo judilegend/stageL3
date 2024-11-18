@@ -22,15 +22,19 @@ import { Logo } from "../ui/Logo";
 interface SidebarProps {
   className?: string;
 }
+import { useProjectGuards } from "@/middleware/guards/projectGuards";
 
 export function AppSidebar({ className }: SidebarProps) {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { currentProject } = useCurrentProject();
   const router = useRouter();
   const pathname = usePathname();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const userInitial = user?.username ? user.username[0].toUpperCase() : "U";
+  const { canCreateProject } = useProjectGuards();
+  console.log("Sidebar user:", user); // Debug log
+  console.log("Can create project:", canCreateProject()); // Debug log
 
   const menuItems = [
     {
@@ -103,17 +107,14 @@ export function AppSidebar({ className }: SidebarProps) {
             <Logo />{" "}
           </div>
 
-          <div className="p-4 mt-2">
-            <Button
-              className="w-full bg-black hover:bg-primary/90 text-white"
-              size="lg"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
-              <PlusCircle className="h-5 w-5 mr-2" />
-              Créer un projet
-            </Button>
-          </div>
-
+          {isAuthenticated && canCreateProject() && (
+            <div className="p-4 mt-2">
+              <Button onClick={() => setIsCreateModalOpen(true)}>
+                <PlusCircle className="h-5 w-5 mr-2" />
+                Créer un projet
+              </Button>
+            </div>
+          )}
           <nav className="flex-1 space-y-1 px-4 py-2">
             {menuItems.map((item) => (
               <button

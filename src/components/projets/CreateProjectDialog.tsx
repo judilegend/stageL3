@@ -14,6 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProjects } from "@/contexts/ProjectContext";
 import { projectService } from "@/services/projectService";
 import { ProjectStatus } from "@/types/project";
+import { useProjectGuards } from "@/middleware/guards/projectGuards";
+import toast from "react-hot-toast";
 
 interface CreateProjectDialogProps {
   isOpen: boolean;
@@ -39,9 +41,15 @@ export default function CreateProjectDialog({
     status: "submitted" as ProjectStatus,
     progress: 0,
   });
+  const { canCreateProject } = useProjectGuards();
 
   const handleSubmit = async () => {
     try {
+      if (!canCreateProject()) {
+        toast.error("Permission insuffisante pour créer un projet");
+        return;
+      }
+
       const newProject = await projectService.createProject({
         ...formData,
         requestedBudgetLowwer: parseFloat(formData.requestedBudgetLowwer),
@@ -57,8 +65,9 @@ export default function CreateProjectDialog({
 
       const projects = await projectService.getAllProjects();
       dispatch({ type: "SET_PROJECTS", payload: projects });
-      router.push("/projets");
 
+      toast.success("Projet créé avec succès");
+      router.push("/projets");
       onClose();
 
       setFormData({
@@ -75,9 +84,11 @@ export default function CreateProjectDialog({
         progress: 0,
       });
     } catch (error) {
+      toast.error("Erreur lors de la création du projet");
       console.error("Error creating project:", error);
     }
   };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
