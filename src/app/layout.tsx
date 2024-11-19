@@ -12,6 +12,7 @@ import { ActivityProvider } from "@/contexts/ActivityContext";
 import { CurrentProjectProvider } from "@/contexts/CurrentProjectContext";
 import { SprintProvider } from "@/contexts/SprintContext";
 import { Toaster } from "react-hot-toast";
+import { PWATestFeatures } from "@/components/pwa/PWATestFeatures";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -46,7 +47,9 @@ export default function RootLayout({
                   <ActivityProvider>
                     <TaskProvider>
                       <Toaster position="top-right" />
+
                       {children}
+                      <PWATestFeatures />
                     </TaskProvider>
                   </ActivityProvider>
                 </WorkPackageProvider>
