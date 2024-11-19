@@ -47,12 +47,12 @@ export function AppSidebar({ className }: SidebarProps) {
       icon: LayoutDashboard,
     },
     {
-      title: "Kanban",
+      title: "Flux de travail",
       url: currentProject ? `/projets/${currentProject.id}/kanban` : "",
       icon: FolderKanban,
     },
     {
-      title: "Product Backlog",
+      title: "Kanban",
       url: currentProject
         ? `/projets/${currentProject.id}/backlog`
         : "/backlog",
