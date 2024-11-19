@@ -11,6 +11,8 @@ import { WorkPackageProvider } from "@/contexts/WorkpackageContext";
 import { ActivityProvider } from "@/contexts/ActivityContext";
 import { CurrentProjectProvider } from "@/contexts/CurrentProjectContext";
 import { SprintProvider } from "@/contexts/SprintContext";
+import { Toaster } from "react-hot-toast";
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -42,7 +44,10 @@ export default function RootLayout({
               <ProjectProvider>
                 <WorkPackageProvider>
                   <ActivityProvider>
-                    <TaskProvider>{children}</TaskProvider>
+                    <TaskProvider>
+                      <Toaster position="top-right" />
+                      {children}
+                    </TaskProvider>
                   </ActivityProvider>
                 </WorkPackageProvider>
               </ProjectProvider>

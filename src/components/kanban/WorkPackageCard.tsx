@@ -24,6 +24,11 @@ import { Activity } from "@/types/activity";
 import { AddActivityForm } from "./AddActivityForm";
 import { EditActivityForm } from "./EditActivityForm";
 import { useActivity } from "@/contexts/ActivityContext";
+import {
+  useActivityGuards,
+  useWorkPackageGuards,
+} from "@/middleware/guards/projectGuards";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface WorkPackageCardProps {
   workPackage: WorkPackage;
@@ -38,6 +43,13 @@ export function WorkPackageCard({
   onEdit,
   onDelete,
 }: WorkPackageCardProps) {
+  //permissions pour gestion de work packages
+  const { canEditWorkPackage, canDeleteWorkPackage } = useWorkPackageGuards();
+  //permissions pour gestion d'activités
+  const { canCreateActivity, canEditActivity, canDeleteActivity } =
+    useActivityGuards();
+  const { user } = useAuth();
+
   const [isAddingActivity, setIsAddingActivity] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -66,22 +78,28 @@ export function WorkPackageCard({
     <>
       <Card className="bg-white shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-semibold">
+          <CardTitle className="text-xl font-semibold">
             {workPackage.title}
           </CardTitle>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>Modifier</DropdownMenuItem>
-              <DropdownMenuItem onClick={onDelete} className="text-red-600">
-                Supprimer
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {(canEditWorkPackage() || canDeleteWorkPackage()) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {canEditWorkPackage() && (
+                  <DropdownMenuItem onClick={onEdit}>Modifier</DropdownMenuItem>
+                )}
+                {canDeleteWorkPackage() && (
+                  <DropdownMenuItem onClick={onDelete} className="text-red-600">
+                    Supprimer
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -103,7 +121,7 @@ export function WorkPackageCard({
                   ) : (
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="font-medium text-sm">
+                        <h4 className="font-medium text-lg">
                           {activity.title}
                         </h4>
                         {activity.description && (
@@ -112,30 +130,38 @@ export function WorkPackageCard({
                           </p>
                         )}
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => setEditingActivity(activity)}
-                          >
-                            Modifier
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteActivity(activity.id)}
-                            className="text-red-600"
-                          >
-                            Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {user && (canEditActivity() || canDeleteActivity()) ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {canEditActivity() && (
+                              <DropdownMenuItem
+                                onClick={() => setEditingActivity(activity)}
+                              >
+                                Modifier
+                              </DropdownMenuItem>
+                            )}
+                            {canDeleteActivity() && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleDeleteActivity(activity.id)
+                                }
+                                className="text-red-600"
+                              >
+                                Supprimer
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : null}
                     </div>
                   )}
                   <div className="mt-6 w-full">
@@ -146,27 +172,29 @@ export function WorkPackageCard({
             ))}{" "}
           </div>
 
-          <div className="pt-2">
-            {isAddingActivity ? (
-              <AddActivityForm
-                workPackageId={workPackage.id}
-                onSuccess={() => {
-                  setIsAddingActivity(false);
-                  fetchActivities(workPackage.id);
-                }}
-                onCancel={() => setIsAddingActivity(false)}
-              />
-            ) : (
-              <Button
-                variant="ghost"
-                className="w-full flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900"
-                onClick={() => setIsAddingActivity(true)}
-              >
-                <Plus className="h-4 w-4" />
-                Ajouter une activité
-              </Button>
-            )}
-          </div>
+          {canCreateActivity() && (
+            <div className="pt-2">
+              {isAddingActivity ? (
+                <AddActivityForm
+                  workPackageId={workPackage.id}
+                  onSuccess={() => {
+                    setIsAddingActivity(false);
+                    fetchActivities(workPackage.id);
+                  }}
+                  onCancel={() => setIsAddingActivity(false)}
+                />
+              ) : (
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setIsAddingActivity(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter une activité
+                </Button>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

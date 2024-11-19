@@ -18,19 +18,27 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentProject } from "@/contexts/CurrentProjectContext";
 import CreateProjectDialog from "../projets/CreateProjectDialog";
 import { LoadingSpinner } from "../ui/loading-spinner";
-
+import { Logo } from "../ui/Logo";
 interface SidebarProps {
   className?: string;
 }
+import { useProjectGuards } from "@/middleware/guards/projectGuards";
+import { useUserGuards } from "@/middleware/guards/userGuards";
 
 export function AppSidebar({ className }: SidebarProps) {
-  const { user } = useAuth();
+  //permission user management access
+  const { canAccessUserManagement } = useUserGuards();
+
+  const { user, isAuthenticated } = useAuth();
   const { currentProject } = useCurrentProject();
   const router = useRouter();
   const pathname = usePathname();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const userInitial = user?.username ? user.username[0].toUpperCase() : "U";
+  const { canCreateProject } = useProjectGuards();
+  console.log("Sidebar user:", user); // Debug log
+  console.log("Can create project:", canCreateProject()); // Debug log
 
   const menuItems = [
     {
@@ -39,22 +47,16 @@ export function AppSidebar({ className }: SidebarProps) {
       icon: LayoutDashboard,
     },
     {
-      title: "Projets",
-      url: "/projets",
+      title: "Flux de travail",
+      url: currentProject ? `/projets/${currentProject.id}/kanban` : "",
       icon: FolderKanban,
     },
     {
-      title: "Product Backlog",
+      title: "Kanban",
       url: currentProject
         ? `/projets/${currentProject.id}/backlog`
         : "/backlog",
       icon: Archive,
-      requiresProject: true,
-    },
-    {
-      title: "Gestion des tâches",
-      url: currentProject ? `/projets/${currentProject.id}/taches` : "/taches",
-      icon: ListTodo,
       requiresProject: true,
     },
     {
@@ -66,6 +68,13 @@ export function AppSidebar({ className }: SidebarProps) {
       requiresProject: true,
     },
     {
+      title: "Gestion des tâches",
+      url: currentProject ? `/projets/${currentProject.id}/taches` : "/taches",
+      icon: ListTodo,
+      requiresProject: true,
+    },
+
+    {
       title: "Messages",
       url: "/messages",
       icon: MessageSquare,
@@ -74,8 +83,9 @@ export function AppSidebar({ className }: SidebarProps) {
       title: "Gerer user",
       url: "/gestion-utilisateurs",
       icon: Users,
+      show: canAccessUserManagement,
     },
-  ];
+  ].filter((item) => !item.show || item.show());
 
   const handleNavigation = async (
     url: string,
@@ -96,23 +106,25 @@ export function AppSidebar({ className }: SidebarProps) {
   return (
     <>
       {isLoading && <LoadingSpinner />}
-      <aside className={cn("w-64 bg-white shadow-lg h-screen", className)}>
+      <aside
+        className={cn(
+          "hidden lg:flex w-64 bg-white shadow-lg h-screen",
+          className
+        )}
+      >
         <div className="flex h-full flex-col">
           <div className="p-4 border-b text-xl font-semibold mt-4">
-            Dev DepannPC
+            <Logo />{" "}
           </div>
 
-          <div className="p-4 mt-2">
-            <Button
-              className="w-full bg-black hover:bg-primary/90 text-white"
-              size="lg"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
-              <PlusCircle className="h-5 w-5 mr-2" />
-              Créer un projet
-            </Button>
-          </div>
-
+          {isAuthenticated && canCreateProject() && (
+            <div className="p-4 mt-2">
+              <Button onClick={() => setIsCreateModalOpen(true)}>
+                <PlusCircle className="h-5 w-5 mr-2" />
+                Créer un projet
+              </Button>
+            </div>
+          )}
           <nav className="flex-1 space-y-1 px-4 py-2">
             {menuItems.map((item) => (
               <button

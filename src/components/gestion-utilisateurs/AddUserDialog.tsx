@@ -118,11 +118,11 @@ export default function AddUserDialog() {
               <SelectContent>
                 <SelectItem value="admin">Administrateur</SelectItem>
                 <SelectItem value="user">Utilisateur</SelectItem>
-                <SelectItem value="project_owner">Chef de Projet</SelectItem>
+                <SelectItem value="product_owner">Product Owner</SelectItem>
                 <SelectItem value="lead_developer">Lead Developer</SelectItem>
+                <SelectItem value="tech_lead">Tech Lead</SelectItem>
                 <SelectItem value="scrum_master">Scrum Master</SelectItem>
                 <SelectItem value="developper">Développeur</SelectItem>
-                <SelectItem value="tech_lead">Tech Lead</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -1,135 +1,282 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useCallback, useMemo } from "react";
 import { useMessages } from "@/contexts/MessageContext";
-import { Search, MessageCircle } from "lucide-react";
+import { Search, Plus, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface User {
   id: number;
   username: string;
   is_online: boolean;
-  last_seen?: string;
 }
 
 interface UserListProps {
   currentUserId: number;
+  onUserSelect?: () => void;
 }
 
-export const UserList = ({ currentUserId }: UserListProps) => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+const UserAvatar = ({
+  username,
+  isOnline,
+  unreadCount,
+}: {
+  username: string;
+  isOnline: boolean;
+  unreadCount?: number;
+}) => (
+  <div className="relative">
+    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+      <span className="font-semibold text-blue-600">
+        {username.charAt(0).toUpperCase()}
+      </span>
+    </div>
+    <div
+      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+        isOnline ? "bg-green-500" : "bg-gray-400"
+      } transition-colors duration-200`}
+    />
+    {unreadCount !== undefined && unreadCount > 0 && (
+      <Badge
+        variant="destructive"
+        className="absolute -top-1 -right-1 animate-pulse"
+      >
+        {unreadCount}
+      </Badge>
+    )}
+  </div>
+);
+
+const GroupAvatar = ({
+  name,
+  unreadCount,
+}: {
+  name: string;
+  unreadCount?: number;
+}) => (
+  <div className="relative">
+    <div className="w-10 h-10 bg-violet-100 rounded-full flex items-center justify-center">
+      <Users className="h-5 w-5 text-violet-600" />
+    </div>
+    {unreadCount !== undefined && unreadCount > 0 && (
+      <Badge
+        variant="destructive"
+        className="absolute -top-1 -right-1 animate-pulse"
+      >
+        {unreadCount}
+      </Badge>
+    )}
+  </div>
+);
+
+export const UserList = ({ currentUserId, onUserSelect }: UserListProps) => {
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [isCreatingRoom, setIsCreatingRoom] = React.useState(false);
+  const [roomName, setRoomName] = React.useState("");
+  const [selectedMembers, setSelectedMembers] = React.useState<number[]>([]);
+  const [users, setUsers] = React.useState<User[]>([]);
+
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
   const {
-    setSelectedConversation,
-    loadConversation,
     setSelectedUser,
-    selectedConversation,
     unreadCounts,
+    unreadGroupCounts,
+    rooms = [],
+    setSelectedRoom,
+    createRoom,
+    loadRoomMessages,
+    loadUnreadGroupCounts,
+    markGroupMessagesAsRead,
+    loadUserRooms,
+    selectedRoom,
   } = useMessages();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/user", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        const data = await response.json();
-        const filteredUsers = data.filter(
-          (user: User) => user.id !== currentUserId
-        );
-        setUsers(filteredUsers);
-      } catch (error) {
-        console.error("Failed to fetch users:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUsers();
+  const fetchUsers = useCallback(async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/user", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const data = await response.json();
+      setUsers(data.filter((user: User) => user.id !== currentUserId));
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    }
   }, [currentUserId]);
 
-  const filteredUsers = users.filter((user) =>
-    user.username.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    fetchUsers();
+    if (!selectedRoom) {
+      loadUnreadGroupCounts();
+    }
+  }, [fetchUsers, selectedRoom, loadUnreadGroupCounts]);
+
+  const filteredUsers = useMemo(
+    () =>
+      users.filter((user) =>
+        user.username.toLowerCase().includes(debouncedSearch.toLowerCase())
+      ),
+    [users, debouncedSearch]
   );
 
-  const handleUserSelect = (user: User) => {
-    setSelectedUser(user); // Pass the full user object
-    setSelectedConversation(user.id);
-    loadConversation(user.id);
+  const filteredRooms = useMemo(
+    () =>
+      rooms.filter((room) =>
+        room.name?.toLowerCase().includes(debouncedSearch.toLowerCase())
+      ),
+    [rooms, debouncedSearch]
+  );
+
+  const handleUserSelect = useCallback(
+    (user: User) => {
+      setSelectedUser(user);
+      onUserSelect?.();
+    },
+    [setSelectedUser, onUserSelect]
+  );
+
+  const handleRoomSelect = useCallback(
+    (room) => {
+      setSelectedRoom(room);
+      loadRoomMessages(room.id);
+      markGroupMessagesAsRead(room.id);
+      onUserSelect?.();
+    },
+    [setSelectedRoom, loadRoomMessages, markGroupMessagesAsRead, onUserSelect]
+  );
+
+  const handleCreateRoom = async () => {
+    if (roomName && selectedMembers.length > 0) {
+      try {
+        await createRoom(roomName, selectedMembers);
+        setIsCreatingRoom(false);
+        setRoomName("");
+        setSelectedMembers([]);
+        loadUserRooms();
+      } catch (error) {
+        console.error("Error creating room:", error);
+      }
+    }
   };
 
   return (
     <div className="w-80 border-r bg-gray-50 flex flex-col h-full">
-      <div className="p-4 border-b bg-white">
-        <div className="flex items-center gap-2 mb-4">
-          <MessageCircle className="h-6 w-6 text-blue-500" />
-          <h2 className="text-xl font-semibold">Messages</h2>
-        </div>
+      {/* Header */}
+      <div className="p-4 border-b bg-white sticky top-0 z-10 flex items-center justify-between">
+        <h2 className="text-lg font-semibold max-md:ml-10">Messages</h2>
+        <Dialog open={isCreatingRoom} onOpenChange={setIsCreatingRoom}>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="">
+              <Plus className="h-5 w-5" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Group</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <Input
+                placeholder="Group Name"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+              />
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                <p className="text-sm font-medium">Select Members:</p>
+                {users.map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center space-x-2 p-2  rounded-md"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedMembers.includes(user.id)}
+                      onChange={(e) => {
+                        setSelectedMembers((prev) =>
+                          e.target.checked
+                            ? [...prev, user.id]
+                            : prev.filter((id) => id !== user.id)
+                        );
+                      }}
+                      className="rounded"
+                    />
+                    <span>{user.username}</span>
+                  </div>
+                ))}
+              </div>
+              <Button
+                onClick={handleCreateRoom}
+                disabled={!roomName || selectedMembers.length === 0}
+                className="w-full"
+              >
+                Create Group
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative p-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <input
-            type="text"
-            placeholder="Search contacts..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+          <Input
+            placeholder="Search conversations..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          </div>
-        ) : (
-          <div className="space-y-1 p-2">
-            {filteredUsers.length === 0 && !isLoading && (
-              <div className="text-center py-4 text-gray-500">
-                {searchTerm ? "No users found" : "No contacts available"}
-              </div>
-            )}
-            {filteredUsers.map((user) => (
-              <button
-                key={user.id}
-                onClick={() => handleUserSelect(user)}
-                className={`w-full text-left p-3 rounded-lg transition flex items-center space-x-3 ${
-                  selectedConversation === user.id
-                    ? "bg-blue-50 text-blue-600"
-                    : "hover:bg-gray-100"
-                }`}
-              >
-                <div className="relative">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="font-semibold text-blue-600">
-                      {user.username.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  {unreadCounts[user.id] > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                      {unreadCounts[user.id]}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{user.username}</span>
-                    <span
-                      className={`w-2 h-2 rounded-full ${
-                        user.is_online ? "bg-green-500" : "bg-gray-300"
-                      }`}
-                    />
-                  </div>
-                  {!user.is_online && user.last_seen && (
-                    <p className="text-sm text-gray-500">
-                      Last seen: {new Date(user.last_seen).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+      {/* List */}
+      <div className="flex-1 overflow-y-auto space-y-1 p-2">
+        {filteredRooms.map((room) => (
+          <Button
+            key={room.id}
+            variant="ghost"
+            className="w-full flex items-center justify-start space-x-3 hover:bg-gray-100"
+            onClick={() => handleRoomSelect(room)}
+          >
+            <GroupAvatar
+              name={room.name}
+              unreadCount={unreadGroupCounts[room.id]}
+            />
+            <div>
+              <p className="font-medium">{room.name}</p>
+            </div>
+          </Button>
+        ))}
+
+        {filteredUsers.map((user) => (
+          <Button
+            key={user.id}
+            variant="ghost"
+            className="w-full flex items-center justify-start space-x-3 "
+            onClick={() => handleUserSelect(user)}
+          >
+            <UserAvatar
+              username={user.username}
+              isOnline={user.is_online}
+              unreadCount={unreadCounts[user.id]}
+            />
+            <div>
+              <p className="font-medium">{user.username}</p>
+              <p className="text-sm text-gray-500">
+                {user.is_online ? "Online" : "Offline"}
+              </p>
+            </div>
+          </Button>
+        ))}
       </div>
     </div>
   );

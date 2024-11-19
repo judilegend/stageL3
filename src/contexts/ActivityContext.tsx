@@ -8,6 +8,7 @@ import {
 } from "react";
 import { Activity } from "@/types/activity";
 import * as activityService from "@/services/activity-service";
+import { useActivityGuards } from "@/middleware/guards/projectGuards";
 
 interface ActivityContextType {
   activities: Activity[];
@@ -23,6 +24,8 @@ const ActivityContext = createContext<ActivityContextType | undefined>(
 
 export function ActivityProvider({ children }: { children: ReactNode }) {
   const [activities, setActivities] = useState<Activity[]>([]);
+  const { canCreateActivity, canEditActivity, canDeleteActivity } =
+    useActivityGuards();
 
   const fetchActivities = useCallback(async (workPackageId: string) => {
     try {
@@ -44,14 +47,23 @@ export function ActivityProvider({ children }: { children: ReactNode }) {
     activities,
     fetchActivities,
     addActivity: async (activity: Partial<Activity>) => {
+      if (!canCreateActivity()) {
+        throw new Error("Unauthorized to create activity");
+      }
       const newActivity = await activityService.createActivity(activity);
       setActivities((prev) => [...prev, newActivity]);
     },
     deleteActivity: async (id: string) => {
+      if (!canDeleteActivity()) {
+        throw new Error("Unauthorized to delete activity");
+      }
       await activityService.deleteActivity(id);
       setActivities((prev) => prev.filter((act) => act.id !== id));
     },
     updateActivity: async (id: string, activity: Partial<Activity>) => {
+      if (!canEditActivity()) {
+        throw new Error("Unauthorized to edit activity");
+      }
       const updatedActivity = await activityService.updateActivity(
         id,
         activity

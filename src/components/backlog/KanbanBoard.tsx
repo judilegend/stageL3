@@ -3,6 +3,9 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Task, ApiTask } from "@/types/task";
 import { BacklogCard } from "./BacklogCard";
 import { useMemo, memo } from "react";
+import { taskStatusMiddleware } from "@/middleware/taskStatusMiddleware";
+import { useAuth } from "@/contexts/AuthContext";
+import toast from "react-hot-toast";
 
 const columns = {
   todo: { title: "À faire", color: "border-blue-500" },
@@ -20,17 +23,8 @@ export const KanbanBoard = memo(function KanbanBoard({
   tasks: ApiTask[];
   onUpdateTask: (id: number, update: { status: string }) => void;
 }) {
-  const handleDragEnd = useMemo(
-    () => (result: { destination: any; source: any; draggableId: any }) => {
-      if (!result.destination) return;
-      const { source, destination, draggableId } = result;
-      if (source.droppableId !== destination.droppableId) {
-        onUpdateTask(Number(draggableId), { status: destination.droppableId });
-      }
-    },
-    [onUpdateTask]
-  );
-
+  //definir permission
+  const { user } = useAuth();
   const normalizedTasks = useMemo(
     () =>
       tasks.map((task, index) => ({
@@ -47,6 +41,44 @@ export const KanbanBoard = memo(function KanbanBoard({
         projectId: parseInt(projectId),
       })),
     [tasks, projectId]
+  );
+
+  const handleDragEnd = useMemo(
+    () => (result: { destination: any; source: any; draggableId: any }) => {
+      if (!result.destination) return;
+      const { source, destination, draggableId } = result;
+
+      if (source.droppableId !== destination.droppableId) {
+        const task = normalizedTasks.find((t) => t.id === Number(draggableId));
+
+        if (!task || !user) return;
+
+        const canChange = taskStatusMiddleware.canChangeStatus({
+          currentStatus: source.droppableId,
+          newStatus: destination.droppableId,
+          task,
+          user,
+        });
+
+        if (!canChange) {
+          toast.error("Vous n'êtes pas autorisé à déplacer cette tâche");
+          return;
+        }
+
+        const isValidTransition = taskStatusMiddleware.validateStatusTransition(
+          source.droppableId,
+          destination.droppableId
+        );
+
+        if (canChange && isValidTransition) {
+          onUpdateTask(Number(draggableId), {
+            status: destination.droppableId,
+          });
+          toast.success("Statut de la tâche mis à jour avec succès");
+        }
+      }
+    },
+    [onUpdateTask, normalizedTasks, user]
   );
 
   const organizedTasks = useMemo(

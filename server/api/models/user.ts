@@ -54,7 +54,7 @@ User.init(
       type: DataTypes.ENUM(
         "user",
         "admin",
-        "project_owner",
+        "product_owner",
         "lead_developer",
         "scrum_master",
         "developper",

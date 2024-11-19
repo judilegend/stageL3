@@ -22,6 +22,8 @@ import { useState } from "react";
 import { TaskList } from "./TaskList";
 import { AddTasksToSprintDialog } from "./AddTasksToSprintDialog";
 import { useSprints } from "@/contexts/SprintContext";
+import { useSprintGuards } from "@/middleware/guards/projectGuards";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SprintCardProps {
   sprint: Sprint;
@@ -31,6 +33,9 @@ export function SprintCard({ sprint }: SprintCardProps) {
   const [showTasks, setShowTasks] = useState(false);
   const [showAddTasks, setShowAddTasks] = useState(false);
   const { updateSprint } = useSprints();
+  //definir la permission
+  const { user } = useAuth();
+  const { canAddTaskToSprint } = useSprintGuards();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -126,14 +131,17 @@ export function SprintCard({ sprint }: SprintCardProps) {
         <Button variant="outline" onClick={() => setShowTasks(!showTasks)}>
           {showTasks ? "Hide Tasks" : "Show Tasks"}
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => setShowAddTasks(true)}
-          className="flex items-center gap-2"
-        >
-          <PlusCircle className="h-4 w-4" />
-          Add Tasks
-        </Button>
+        {user && canAddTaskToSprint() && (
+          <Button
+            variant="outline"
+            onClick={() => setShowAddTasks(true)}
+            className="flex items-center gap-2"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Add Tasks
+          </Button>
+        )}
+
         {/* </div> */}
         {/* <Button
           variant="secondary"

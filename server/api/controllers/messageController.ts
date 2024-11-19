@@ -3,7 +3,7 @@ import messageService from "../services/messageService";
 
 class MessageController {
   async sendDirectMessage(
-    req: Request & { user?: { id: string } },
+    req: Request & { user?: { id: string }; file?: any },
     res: Response
   ) {
     try {
@@ -17,11 +17,13 @@ class MessageController {
       const message = await messageService.createDirectMessage(
         parseInt(senderId),
         parseInt(receiverId),
-        content
+        content,
+        req.file
       );
 
       res.status(201).json(message);
     } catch (error) {
+      console.error("Error sending message:", error);
       res.status(500).json({ error: "Failed to send message" });
     }
   }

@@ -1,6 +1,7 @@
 import { useSprints } from "@/contexts/SprintContext";
 import { SprintCard } from "./SprintCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function SprintList({ filter }: { filter: string }) {
   const { sprints, loading } = useSprints();

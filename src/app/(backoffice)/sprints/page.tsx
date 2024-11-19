@@ -8,19 +8,25 @@ import { SprintFilters } from "@/components/sprints/SprintFilters";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSprintGuards } from "@/middleware/guards/projectGuards";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SprintsPage() {
   const [open, setOpen] = useState(false);
+  const { canCreateSprint } = useSprintGuards();
+  const { user } = useAuth();
 
   return (
     <SprintProvider>
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Sprint Management</h1>
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Sprint
-          </Button>
+          {user && canCreateSprint() && (
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Sprint
+            </Button>
+          )}
         </div>
 
         <SprintFilters />
@@ -43,7 +49,9 @@ export default function SprintsPage() {
           </TabsContent>
         </Tabs>
 
-        <CreateSprintDialog open={open} onOpenChange={setOpen} />
+        {user && canCreateSprint() && (
+          <CreateSprintDialog open={open} onOpenChange={setOpen} />
+        )}
       </div>
     </SprintProvider>
   );

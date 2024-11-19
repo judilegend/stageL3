@@ -11,7 +11,9 @@ export function ProjectsHeader() {
   return (
     <div className="flex justify-between items-center mb-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Projets</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">
+          Tableau de bord
+        </h1>
         <p className="mt-1 text-sm text-gray-500">
           Gérez vos projets et suivez leur progression
         </p>

@@ -1,8 +1,10 @@
 import { Server, Socket } from "socket.io";
 import { verifyToken } from "../middleware/authMiddleware";
-import DirectMessage from "../models/direct_message";
+import DirectMessage from "../models/message";
+import { GroupMessage } from "../models/groupMessage";
+import User from "../models/user";
+
 export const setupSocketServer = (io: Server) => {
-  // Middleware for authentication
   io.use(async (socket: Socket, next) => {
     try {
       const token = socket.handshake.auth.token;
@@ -19,6 +21,7 @@ export const setupSocketServer = (io: Server) => {
 
   io.on("connection", (socket: Socket) => {
     const userId = socket.data.userId;
+    console.log(`User ${userId} connected`);
 
     // Join personal room
     socket.join(`user:${userId}`);
@@ -28,54 +31,58 @@ export const setupSocketServer = (io: Server) => {
       "direct_message",
       async (data: { receiverId: number; content: string }) => {
         try {
-          // Save message to database using DirectMessage model
           const message = await DirectMessage.create({
             senderId: userId,
             receiverId: data.receiverId,
             content: data.content,
           });
 
-          // Emit to sender and receiver
           io.to(`user:${userId}`)
             .to(`user:${data.receiverId}`)
-            .emit("new_message", {
-              ...message.toJSON(),
-              sender: userId,
-            });
+            .emit("new_message", message);
         } catch (error) {
           socket.emit("error", { message: "Failed to send message" });
         }
       }
     );
 
-    // Join chat room
+    // Group chat functionality
     socket.on("join_room", (roomId: string) => {
       socket.join(`room:${roomId}`);
+      console.log(`User ${userId} joined room ${roomId}`);
     });
 
-    // Leave chat room
     socket.on("leave_room", (roomId: string) => {
       socket.leave(`room:${roomId}`);
+      console.log(`User ${userId} left room ${roomId}`);
     });
 
-    // Handle room messages
     socket.on(
-      "room_message",
-      async (data: { roomId: string; content: string }) => {
+      "group_message",
+      async (data: { roomId: number; content: string }) => {
         try {
-          io.to(`room:${data.roomId}`).emit("new_room_message", {
+          const message = await GroupMessage.create({
+            room_id: data.roomId,
+            sender_id: userId,
             content: data.content,
-            sender: userId,
-            roomId: data.roomId,
-            timestamp: new Date(),
           });
+
+          const messageWithSender = await GroupMessage.findByPk(message.id, {
+            include: [
+              { model: User, as: "sender", attributes: ["id", "username"] },
+            ],
+          });
+
+          io.to(`room:${data.roomId}`).emit(
+            "new_group_message",
+            messageWithSender
+          );
         } catch (error) {
-          socket.emit("error", { message: "Failed to send room message" });
+          socket.emit("error", { message: "Failed to send group message" });
         }
       }
     );
 
-    // Handle disconnection
     socket.on("disconnect", () => {
       console.log(`User ${userId} disconnected`);
     });

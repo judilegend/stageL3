@@ -1,10 +1,9 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
-import Activite from "./activite";
 
 class PieceJointe extends Model {
   public id!: number;
-  public activiteId!: number;
+  public messageId!: number;
   public filename!: string;
   public originalName!: string;
   public path!: string;
@@ -19,13 +18,13 @@ PieceJointe.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    activiteId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: "Activites",
-        key: "id",
-      },
+    messageId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+    },
+    groupMessageId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
     },
     filename: {
       type: DataTypes.STRING,
@@ -51,13 +50,8 @@ PieceJointe.init(
   {
     sequelize,
     modelName: "PieceJointe",
+    tableName: "piece_jointes",
   }
 );
-
-// Add relationship to Activite model
-// PieceJointe.belongsTo(Activite, {
-//   foreignKey: "activiteId",
-//   as: "activite",
-// });
 
 export default PieceJointe;

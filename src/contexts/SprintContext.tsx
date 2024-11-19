@@ -16,6 +16,7 @@ interface SprintContextType {
   error: string | null;
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
+  setSprints: React.Dispatch<React.SetStateAction<Sprint[]>>;
   createSprint: (data: SprintInput) => Promise<void>;
   updateSprint: (id: number, data: Partial<Sprint>) => Promise<void>;
   deleteSprint: (id: number) => Promise<void>;
@@ -36,8 +37,10 @@ export function SprintProvider({ children }: { children: React.ReactNode }) {
   const { currentProject } = useCurrentProject();
 
   useEffect(() => {
-    fetchSprints();
-  }, []);
+    if (currentProject) {
+      fetchSprints();
+    }
+  }, [currentProject]);
 
   const fetchSprints = async () => {
     try {
@@ -86,8 +89,8 @@ export function SprintProvider({ children }: { children: React.ReactNode }) {
         sprintId,
         taskId
       );
-      setSprints(
-        sprints.map((sprint) =>
+      setSprints((prevSprints) =>
+        prevSprints.map((sprint) =>
           sprint.id === sprintId ? updatedSprint : sprint
         )
       );
@@ -121,6 +124,7 @@ export function SprintProvider({ children }: { children: React.ReactNode }) {
     error,
     filters,
     setFilters,
+    setSprints,
     createSprint,
     updateSprint,
     deleteSprint,

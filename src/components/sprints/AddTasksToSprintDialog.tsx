@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSprints } from "@/contexts/SprintContext";
+import { sprintService } from "@/services/sprintService";
 
 interface AddTasksToSprintDialogProps {
   open: boolean;
@@ -23,7 +24,7 @@ export function AddTasksToSprintDialog({
   sprintId,
 }: AddTasksToSprintDialogProps) {
   const { state } = useTasks();
-  const { addTaskToSprint } = useSprints();
+  const { addTaskToSprint, setSprints } = useSprints();
   const [selectedTasks, setSelectedTasks] = useState<number[]>([]);
 
   const availableTasks = Object.values(state.tasksByActivity)
@@ -31,11 +32,18 @@ export function AddTasksToSprintDialog({
     .filter((task) => !task.sprintId);
 
   const handleSubmit = async () => {
-    for (const taskId of selectedTasks) {
-      await addTaskToSprint(sprintId, taskId);
+    try {
+      for (const taskId of selectedTasks) {
+        await addTaskToSprint(sprintId, taskId);
+      }
+      setSelectedTasks([]);
+      // Force a refresh of the sprint list
+      const updatedSprints = await sprintService.getAllSprints();
+      setSprints(updatedSprints);
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error adding tasks to sprint:", error);
     }
-    setSelectedTasks([]);
-    onOpenChange(false);
   };
 
   return (
