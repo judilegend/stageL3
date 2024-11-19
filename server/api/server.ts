@@ -20,6 +20,10 @@ import tacheRoutes from "./routes/tacheRoutes";
 import messageRoutes from "./routes/messageRoutes";
 import pieceJointeRoutes from "./routes/pieceJointeRoutes";
 import groupMessageRoutes from "./routes/groupMessageRoutes";
+//web push
+
+import { initializeWebPush } from "./utils/webPushUtil";
+import notificationRoutes from "./routes/notificationRoutes";
 
 const app = express();
 const server = http.createServer(app);
@@ -40,6 +44,9 @@ const io = new Server(server, {
   },
 });
 
+//initializeWebPush();
+initializeWebPush();
+
 app.use(express.json());
 // app.use("/images", express.static(path.join(__dirname, "./uploads/images")));
 // app.use("/files", express.static(path.join(__dirname, "./uploads/files")));
@@ -56,6 +63,9 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/pomodoro", pomodoroRoutes);
 app.use("/api/piece-jointes", pieceJointeRoutes);
 app.use("/api/groups", groupMessageRoutes);
+//call web push rouutes
+app.use("/api/notifications", notificationRoutes);
+
 
 setupSocketServer(io);
 console.log(
