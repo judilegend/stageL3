@@ -101,3 +101,23 @@ export const useTaskGuards = () => {
 
   return { canCreateTask, canDeleteTask };
 };
+///sprint
+export const useSprintGuards = () => {
+  const { user } = useAuth();
+  const allowedRoles = ["admin", "product_owner", "scrum_master"];
+
+  const canCreateSprint = () => {
+    return user && allowedRoles.includes(user.role);
+  };
+
+  const canAddTaskToSprint = () => {
+    return (
+      user &&
+      ["admin", "product_owner", "scrum_master", "lead_developer"].includes(
+        user.role
+      )
+    );
+  };
+
+  return { canCreateSprint, canAddTaskToSprint };
+};

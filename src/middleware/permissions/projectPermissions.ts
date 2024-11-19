@@ -73,3 +73,19 @@ export const activityPermissions = {
     return role ? allowedRoles.includes(role) : false;
   },
 };
+
+//sprint 
+export const sprintPermissions = {
+  canCreate: (role?: string) => {
+    const allowedRoles = ["admin", "product_owner", "scrum_master"];
+    return role && allowedRoles.includes(role);
+  },
+  canEdit: (role?: string) => {
+    const allowedRoles = ["admin", "product_owner", "scrum_master"];
+    return role && allowedRoles.includes(role);
+  },
+  canDelete: (role?: string) => {
+    const allowedRoles = ["admin", "product_owner"];
+    return role && allowedRoles.includes(role);
+  },
+};
