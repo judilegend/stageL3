@@ -12,6 +12,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Task } from "@/types/task";
 import { useTasks } from "@/contexts/TaskContext";
+import { taskStatusMiddleware } from "@/middleware/taskStatusMiddleware";
+import { useAuth } from "@/contexts/AuthContext";
+import toast from "react-hot-toast";
 
 interface BacklogCardProps {
   task: Task;
@@ -24,6 +27,7 @@ export const BacklogCard = memo(function BacklogCard({
 }: BacklogCardProps) {
   const { state, updateTask } = useTasks();
   const { users } = state;
+  const { user } = useAuth();
 
   const assignedUser = users.find(
     (user) => user.id === Number(task.assignedUserId)
@@ -40,15 +44,40 @@ export const BacklogCard = memo(function BacklogCard({
   };
 
   const handleStatusChange = async () => {
+    if (!user) return;
+
     const statusFlow = {
       todo: "in_progress",
       in_progress: "review",
       review: "done",
       done: "todo",
     } as const;
+
     const newStatus = statusFlow[task.status as keyof typeof statusFlow];
-    await updateTask(task.id, { status: newStatus });
+
+    const canChange = taskStatusMiddleware.canChangeStatus({
+      currentStatus: task.status,
+      newStatus,
+      task,
+      user,
+    });
+
+    if (!canChange) {
+      toast.error("Vous n'êtes pas autorisé à modifier cette tâche");
+      return;
+    }
+
+    const isValidTransition = taskStatusMiddleware.validateStatusTransition(
+      task.status,
+      newStatus
+    );
+
+    if (canChange && isValidTransition) {
+      await updateTask(task.id, { status: newStatus });
+      toast.success("Statut de la tâche mis à jour avec succès");
+    }
   };
+  const isAssigned = task.assignedUserId === user?.id;
 
   return (
     <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">

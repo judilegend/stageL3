@@ -23,8 +23,12 @@ interface SidebarProps {
   className?: string;
 }
 import { useProjectGuards } from "@/middleware/guards/projectGuards";
+import { useUserGuards } from "@/middleware/guards/userGuards";
 
 export function AppSidebar({ className }: SidebarProps) {
+  //permission user management access
+  const { canAccessUserManagement } = useUserGuards();
+
   const { user, isAuthenticated } = useAuth();
   const { currentProject } = useCurrentProject();
   const router = useRouter();
@@ -79,8 +83,9 @@ export function AppSidebar({ className }: SidebarProps) {
       title: "Gerer user",
       url: "/gestion-utilisateurs",
       icon: Users,
+      show: canAccessUserManagement,
     },
-  ];
+  ].filter((item) => !item.show || item.show());
 
   const handleNavigation = async (
     url: string,
