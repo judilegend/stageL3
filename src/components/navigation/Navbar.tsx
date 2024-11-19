@@ -17,6 +17,7 @@ import { projectService } from "@/services/projectService";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import ProjectSubmenu from "./ProjetSubMenu";
+import { MobileSidebar } from "./MobileSidebar";
 
 export default function Navbar() {
   const [userMenu, setUserMenu] = useState(false);
@@ -26,6 +27,8 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const { state, dispatch } = useProjects();
+
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -102,6 +105,12 @@ export default function Navbar() {
     <nav className="bg-white rounded-lg border-b mx-4 mt-3 border-gray-200 shadow-md">
       <div className="flex justify-between items-center px-6 py-3">
         <div className="flex items-center gap-4">
+          <div className="lg:hidden">
+            <MobileSidebar
+              isOpen={isMobileMenuOpen}
+              onOpenChange={setIsMobileMenuOpen}
+            />
+          </div>
           <div className="relative">
             <div className="flex items-center gap-8">
               <span>Mes Projets</span>

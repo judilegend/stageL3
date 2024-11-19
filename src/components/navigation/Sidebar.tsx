@@ -106,7 +106,12 @@ export function AppSidebar({ className }: SidebarProps) {
   return (
     <>
       {isLoading && <LoadingSpinner />}
-      <aside className={cn("w-64 bg-white shadow-lg h-screen", className)}>
+      <aside
+        className={cn(
+          "hidden lg:flex w-64 bg-white shadow-lg h-screen",
+          className
+        )}
+      >
         <div className="flex h-full flex-col">
           <div className="p-4 border-b text-xl font-semibold mt-4">
             <Logo />{" "}

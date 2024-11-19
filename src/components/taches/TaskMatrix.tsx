@@ -50,7 +50,7 @@ export function TaskMatrix() {
   );
 
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2 md:p-6">
       <Card className="border-red-200">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-red-700">
