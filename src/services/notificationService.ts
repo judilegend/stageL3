@@ -19,7 +19,7 @@ export class NotificationService {
         applicationServerKey: this.urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
       });
 
-      await fetch("/api/notifications/subscribe", {
+      await fetch("http://localhost:5000/api/notifications/subscribe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -30,6 +30,8 @@ export class NotificationService {
       console.error("Erreur lors de l'inscription aux notifications:", error);
     }
   }
+
+  //pour le tache assignement
 
   private static urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
