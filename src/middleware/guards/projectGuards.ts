@@ -7,8 +7,8 @@ import {
 
 export const useProjectGuards = () => {
   const { user, isAuthenticated } = useAuth();
-  console.log("Current user:", user); // Debug log
-  console.log("Is authenticated:", isAuthenticated); // Debug log
+  // console.log("Current user:", user); // Debug log
+  // console.log("Is authenticated:", isAuthenticated); // Debug log
 
   return {
     canCreateProject: () => {
@@ -27,13 +27,13 @@ export const useProjectGuards = () => {
 };
 export const useWorkPackageGuards = () => {
   const { user, isAuthenticated } = useAuth();
-  console.log("Current user in guards:", user); // Debug log
-  console.log("Is authenticated:", isAuthenticated); // Debug log
+  // console.log("Current user in guards:", user); // Debug log
+  // console.log("Is authenticated:", isAuthenticated); // Debug log
 
   return {
     canCreateWorkPackage: () => {
       const canCreate = workPackagePermissions.canCreate(user?.role);
-      console.log("Can create work package:", canCreate, "Role:", user?.role); // Debug log
+      // console.log("Can create work package:", canCreate, "Role:", user?.role); // Debug log
       return isAuthenticated && canCreate;
     },
 

@@ -24,21 +24,33 @@ import groupMessageRoutes from "./routes/groupMessageRoutes";
 
 import { initializeWebPush } from "./utils/webPushUtil";
 import notificationRoutes from "./routes/notificationRoutes";
+import notificationService from "./services/notificationService";
 
 const app = express();
 const server = http.createServer(app);
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     credentials: true,
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Cache-Control",
+      "X-Requested-With",
+      "Accept",
+      "Access-Control-Allow-Origin",
+      "Access-Control-Allow-Headers",
+    ],
+    exposedHeaders: ["set-cookie"],
   })
 );
 
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: ["Authorization"],
   },
@@ -66,18 +78,17 @@ app.use("/api/groups", groupMessageRoutes);
 //call web push rouutes
 app.use("/api/notifications", notificationRoutes);
 
+// Pass socket.io instance to notification service
+notificationService.setSocketIO(io);
 
 setupSocketServer(io);
-console.log(
-  "Static files served from:",
-  path.join(__dirname, "../uploads/images")
-);
 
 const PORT = process.env.PORT || 5000;
 
 sequelize.sync().then(() => {
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log(`WebSocket server initialized`);
   });
 });
 

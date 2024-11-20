@@ -2,7 +2,7 @@
 export const projectPermissions = {
   canCreate: (role?: string) => {
     const allowedRoles = ["admin", "product_owner", "scrum_master"];
-    console.log("Checking role:", role); // Debug log
+    // console.log("Checking role:", role); // Debug log
     return role ? allowedRoles.includes(role) : false;
   },
 
@@ -74,7 +74,7 @@ export const activityPermissions = {
   },
 };
 
-//sprint 
+//sprint
 export const sprintPermissions = {
   canCreate: (role?: string) => {
     const allowedRoles = ["admin", "product_owner", "scrum_master"];
