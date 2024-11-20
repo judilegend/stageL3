@@ -4,8 +4,13 @@ import { ProjectsHeader } from "@/components/projets/ProjectsHeader";
 import { Loader2 } from "lucide-react";
 
 async function getProjects() {
-  const res = await fetch("http://localhost:5000/api/projects", {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects`, {
     cache: "no-store",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-cache",
+    },
   });
 
   if (!res.ok) {

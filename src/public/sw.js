@@ -1,59 +1,52 @@
-const CACHE_NAME = "pms-cache-v1";
-
-// Files to cache for offline functionality
-const urlsToCache = [
-  "/",
-  "/offline",
-  "/manifest.json",
-  "/icons/icon-192x192.png",
-  "/icons/icon-512x512.png",
-];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
-  );
-});
-
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) {
-        return response;
-      }
-      return fetch(event.request).catch(() => caches.match("/offline"));
-    })
-  );
-});
-
-self.addEventListener("sync", (event) => {
-  if (event.tag === "sync-pending-actions") {
-    event.waitUntil(syncPendingActions());
-  }
-});
 self.addEventListener("push", (event) => {
+  if (!event.data) return;
+
+  const data = event.data.json();
   const options = {
-    body: event.data.text(),
-    icon: "/icons/icon-192x192.png",
-    badge: "/icons/icon-72x72.png",
-    vibrate: [100, 50, 100],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: "1",
-    },
+    body: data.body,
+    icon: data.icon || "/icons/icon-192x192.png",
+    badge: "/icons/badge-icon.png",
+    data: data.data,
+    tag: `task-${data.data.taskId}`,
     actions: [
       {
-        action: "explore",
-        title: "Voir les détails",
+        action: "open",
+        title: "Voir la tâche",
       },
       {
         action: "close",
         title: "Fermer",
       },
     ],
+    requireInteraction: true,
+    renotify: true,
   };
 
-  event.waitUntil(
-    self.registration.showNotification("Project Management System", options)
-  );
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+self.addEventListener("fetch", (event) => {
+  if (event.request.url.includes("/api/")) {
+    event.respondWith(
+      fetch(event.request, {
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }).catch((error) => {
+        console.error("Fetch error:", error);
+        return new Response(JSON.stringify({ error: "Network error" }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
+      })
+    );
+  }
+});
+
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  if (event.action === "open" && event.notification.data?.url) {
+    event.waitUntil(clients.openWindow(event.notification.data.url));
+  }
 });
