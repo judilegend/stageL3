@@ -12,7 +12,7 @@ export const projectPermissions = {
   },
 
   canDelete: (role?: string) => {
-    const allowedRoles = ["admin"];
+    const allowedRoles = ["admin", "product_owner", "scrum_master"];
     return role ? allowedRoles.includes(role) : false;
   },
 };
@@ -23,6 +23,7 @@ export const workPackagePermissions = {
       "admin",
       "product_owner",
       "lead_developer",
+      "scrum_master",
       "tech_lead",
     ];
     return role ? allowedRoles.includes(role) : false;
