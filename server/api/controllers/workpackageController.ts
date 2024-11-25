@@ -7,9 +7,10 @@ export const createWorkPackage = async (req: Request, res: Response) => {
     const workPackage = await workpackageService.createWorkPackage(req.body);
     res.status(201).json(workPackage);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error creating work package", error: error.message });
+    res.status(400).json({
+      message: "Error creating work package",
+      error: "an unknown error occurred",
+    });
   }
 };
 
@@ -23,9 +24,10 @@ export const getWorkPackagesByProjectId = async (
     );
     res.json(workPackages);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error fetching work packages", error: error.message });
+    res.status(400).json({
+      message: "Error fetching work packages",
+      error: "an unknown error occurred",
+    });
   }
 };
 
@@ -39,9 +41,10 @@ export const getWorkPackageById = async (req: Request, res: Response) => {
     }
     res.json(workPackage);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error fetching work package", error: error.message });
+    res.status(400).json({
+      message: "Error fetching work package",
+      error: "an unknown error occurred",
+    });
   }
 };
 
@@ -53,9 +56,10 @@ export const updateWorkPackage = async (req: Request, res: Response) => {
     );
     res.json(workPackage);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error updating work package", error: error.message });
+    res.status(400).json({
+      message: "Error updating work package",
+      error: "an unknown error occurred",
+    });
   }
 };
 
@@ -64,8 +68,9 @@ export const deleteWorkPackage = async (req: Request, res: Response) => {
     await workpackageService.deleteWorkPackage(parseInt(req.params.id));
     res.json({ message: "Work package deleted successfully" });
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error deleting work package", error: error.message });
+    res.status(400).json({
+      message: "Error deleting work package",
+      error: "an unknown error occurred",
+    });
   }
 };

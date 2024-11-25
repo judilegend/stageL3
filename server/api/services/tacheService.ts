@@ -2,8 +2,28 @@ import { Op, QueryTypes } from "sequelize";
 import Tache from "../models/tache";
 import User from "../models/user";
 import sequelize from "../config/database";
+import notificationService from "./notificationService";
 export const createTache = async (TacheData: Partial<Tache>) => {
-  return Tache.create(TacheData);
+  const tache = await Tache.create(TacheData);
+
+  // If task is assigned to someone, trigger notification
+  if (TacheData.assignedUserId) {
+    try {
+      const result = await notificationService.notifyTaskAssignment(
+        TacheData.assignedUserId,
+        {
+          id: tache.id,
+          title: tache.title,
+          assignedAt: new Date(),
+        }
+      );
+      console.log("Notification created:", result); // Debug log
+    } catch (error) {
+      console.error("Failed to create notification:", error);
+    }
+  }
+
+  return tache;
 };
 
 export const assignTache = async (TacheId: number, userId: number) => {
@@ -13,8 +33,23 @@ export const assignTache = async (TacheId: number, userId: number) => {
   const user = await User.findByPk(userId);
   if (!user) throw new Error("User not found");
 
-  return tache.update({ assignedUserId: userId });
+  await tache.update({ assignedUserId: userId });
+
+  // Send notification for task assignment
+  try {
+    const result = await notificationService.notifyTaskAssignment(userId, {
+      id: tache.id,
+      title: tache.title,
+      assignedAt: new Date(),
+    });
+    console.log("Assignment notification created:", result);
+  } catch (error) {
+    console.error("Failed to create assignment notification:", error);
+  }
+
+  return tache;
 };
+
 export const getTachesBySprintId = async (sprintId: number) => {
   return Tache.findAll({ where: { sprintId } });
 };
@@ -46,7 +81,23 @@ export const updateTacheAssignment = async (
 ) => {
   const tache = await Tache.findByPk(tacheId);
   if (!tache) throw new Error("Tache not found");
-  return tache.update({ assignedUserId: userId });
+
+  await tache.update({ assignedUserId: userId });
+
+  if (userId) {
+    try {
+      const result = await notificationService.notifyTaskAssignment(userId, {
+        id: tacheId,
+        title: tache.title,
+        assignedAt: new Date(),
+      });
+      console.log("Assignment notification created:", result); // Debug log
+    } catch (error) {
+      console.error("Failed to create assignment notification:", error);
+    }
+  }
+
+  return tache;
 };
 
 // export const updateTacheStatus = async (TacheId: number, status: string) => {

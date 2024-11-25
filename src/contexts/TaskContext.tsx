@@ -10,11 +10,12 @@ import { taskService } from "@/services/taskService";
 import { Task } from "@/types/task";
 import { User } from "@/types/user";
 import { useCurrentProject } from "./CurrentProjectContext";
+import toast from "react-hot-toast";
 
 type TaskState = {
   tasksByActivity: Record<number, Task[]>;
   availableTasks: Task[];
-  projectTasks: Task[]; // Explicitly typed as Task array
+  projectTasks: Task[];
   allTasks: Task[];
   users: User[];
   loading: boolean;
@@ -31,7 +32,7 @@ type TaskAction =
   | { type: "SET_USERS"; payload: User[] }
   | { type: "SET_AVAILABLE_TASKS"; payload: Task[] }
   | { type: "SET_ALL_TASKS"; payload: Task[] }
-  | { type: "SET_PROJECT_TASKS"; payload: Task[] } // Add this line
+  | { type: "SET_PROJECT_TASKS"; payload: Task[] }
   | {
       type: "UPDATE_USER_ASSIGNMENT";
       payload: { taskId: number; userId: number };
@@ -41,13 +42,13 @@ const TaskContext = createContext<
   | {
       state: TaskState;
       fetchTasks: (activiteId: number) => Promise<void>;
-      createTask: (task: Omit<Task, "id">) => Promise<void>;
-      updateTask: (id: number, task: Partial<Task>) => Promise<void>;
+      createTask: (task: Omit<Task, "id">) => Promise<Task>;
+      updateTask: (id: number, task: Partial<Task>) => Promise<Task>;
       deleteTask: (id: number, activiteId: number) => Promise<void>;
       assignTask: (taskId: number, userId: number) => Promise<void>;
       fetchAvailableTasks: () => Promise<void>;
       fetchAllTasks: () => Promise<void>;
-      fetchProjectTasks: (projectId: number) => Promise<void>; // Add this line
+      fetchProjectTasks: (projectId: number) => Promise<void>;
     }
   | undefined
 >(undefined);
@@ -61,18 +62,6 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
           ...state.tasksByActivity,
           [action.payload.activiteId]: action.payload.tasks,
         },
-        loading: false,
-      };
-    case "SET_AVAILABLE_TASKS":
-      return {
-        ...state,
-        availableTasks: action.payload,
-        loading: false,
-      };
-    case "SET_ALL_TASKS":
-      return {
-        ...state,
-        allTasks: action.payload,
         loading: false,
       };
     case "ADD_TASK":
@@ -89,13 +78,6 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
     case "UPDATE_TASK":
       return {
         ...state,
-        projectTasks: Array.isArray(state.projectTasks)
-          ? state.projectTasks.map((task) =>
-              task.id === action.payload.id
-                ? { ...task, ...action.payload }
-                : task
-            )
-          : [],
         tasksByActivity: {
           ...state.tasksByActivity,
           [action.payload.activiteId]:
@@ -105,7 +87,12 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
                 : task
             ) || [],
         },
+        projectTasks: state.projectTasks.map((task) =>
+          task.id === action.payload.id ? { ...task, ...action.payload } : task
+        ),
       };
+    // ... previous reducer cases ...
+
     case "DELETE_TASK":
       return {
         ...state,
@@ -127,10 +114,9 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
         ...state,
         projectTasks: action.payload,
         loading: false,
-        error: null,
       };
-
     case "UPDATE_USER_ASSIGNMENT":
+      // Update task assignment in all relevant state arrays
       return {
         ...state,
         tasksByActivity: Object.keys(state.tasksByActivity).reduce(
@@ -151,45 +137,81 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
       return state;
   }
 };
+
 export function TaskProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(taskReducer, {
     tasksByActivity: {},
     availableTasks: [],
-    projectTasks: [], // Add this line
-    users: [],
+    projectTasks: [],
     allTasks: [],
+    users: [],
     loading: false,
     error: null,
   });
+
+  // Fetch tasks when project changes
   const { currentProject } = useCurrentProject();
 
+  // Initialize users and tasks
   useEffect(() => {
-    const initializeUsers = async () => {
+    const initializeData = async () => {
       try {
         const users = await taskService.getUsers();
         dispatch({ type: "SET_USERS", payload: users });
+        if (currentProject?.id) {
+          await fetchProjectTasks(currentProject.id);
+        }
       } catch (error) {
         dispatch({
           type: "SET_ERROR",
-          payload: "Failed to load users. Please refresh the page.",
+          payload: "Failed to initialize data",
         });
       }
     };
-    initializeUsers();
-    fetchTasks(currentProject?.id || 0);
-  }, []);
-  const fetchAllTasks = async () => {
-    dispatch({ type: "SET_LOADING" });
+    initializeData();
+  }, [currentProject?.id]);
+
+  // Task CRUD operations
+  const createTask = async (taskData: Omit<Task, "id">): Promise<Task> => {
     try {
-      const tasks = await taskService.getAllTasks();
-      dispatch({ type: "SET_ALL_TASKS", payload: tasks });
+      const newTask = await taskService.createTask(taskData);
+      dispatch({ type: "ADD_TASK", payload: newTask });
+      return newTask;
     } catch (error) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: "Failed to fetch all tasks. Please try again.",
-      });
+      toast.error("Échec de la création de la tâche");
+      throw error;
     }
   };
+
+  const updateTask = async (
+    id: number,
+    taskData: Partial<Task>
+  ): Promise<Task> => {
+    try {
+      const updatedTask = await taskService.updateTask(id, taskData);
+      dispatch({ type: "UPDATE_TASK", payload: updatedTask });
+      return updatedTask;
+    } catch (error) {
+      toast.error("Échec de la mise à jour de la tâche");
+      throw error;
+    }
+  };
+
+  const assignTask = async (taskId: number, userId: number): Promise<void> => {
+    try {
+      const updatedTask = await taskService.assignTask(taskId, userId);
+      dispatch({
+        type: "UPDATE_USER_ASSIGNMENT",
+        payload: { taskId, userId },
+      });
+      toast.success("Tâche assignée avec succès");
+    } catch (error) {
+      toast.error("Échec de l'assignation de la tâche");
+      throw error;
+    }
+  };
+
+  // Fetch operations
   const fetchTasks = async (activiteId: number) => {
     dispatch({ type: "SET_LOADING" });
     try {
@@ -198,99 +220,20 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       dispatch({
         type: "SET_ERROR",
-        payload: "Failed to fetch tasks. Please try again.",
+        payload: "Failed to fetch tasks",
       });
     }
   };
 
-  const fetchAvailableTasks = async () => {
-    dispatch({ type: "SET_LOADING" });
-    try {
-      const tasks = await taskService.getAvailableTasks();
-      dispatch({ type: "SET_AVAILABLE_TASKS", payload: tasks });
-    } catch (error) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: "Failed to fetch available tasks. Please try again.",
-      });
-    }
-  };
-  // const fetchProjectTasks = async (projectId: number) => {
-  //   dispatch({ type: "SET_LOADING" });
-  //   try {
-  //     const tasks = await taskService.getTasksByProject(projectId);
-  //     const tasksArray = Array.isArray(tasks) ? tasks : [];
-  //     dispatch({ type: "SET_PROJECT_TASKS", payload: tasksArray });
-  //   } catch (error) {
-  //     dispatch({
-  //       type: "SET_ERROR",
-  //       payload: "Failed to fetch project tasks. Please try again.",
-  //     });
-  //   }
-  // };
   const fetchProjectTasks = async (projectId: number) => {
     dispatch({ type: "SET_LOADING" });
     try {
       const tasks = await taskService.getTasksByProject(projectId);
       dispatch({ type: "SET_PROJECT_TASKS", payload: tasks });
     } catch (error) {
-      console.error("Error in fetchProjectTasks:", error);
-      dispatch({ type: "SET_PROJECT_TASKS", payload: [] });
       dispatch({
         type: "SET_ERROR",
-        payload:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
-    }
-  };
-  const createTask = async (task: Omit<Task, "id">) => {
-    try {
-      const newTask = await taskService.createTask(task);
-      dispatch({ type: "ADD_TASK", payload: newTask });
-    } catch (error) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: "Failed to create task. Please try again.",
-      });
-    }
-  };
-
-  const updateTask = async (id: number, task: Partial<Task>) => {
-    try {
-      const updatedTask = await taskService.updateTask(id, task);
-      dispatch({ type: "UPDATE_TASK", payload: updatedTask });
-    } catch (error) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: "Failed to update task. Please try again.",
-      });
-    }
-  };
-
-  const deleteTask = async (id: number, activiteId: number) => {
-    try {
-      await taskService.deleteTask(id);
-      dispatch({
-        type: "DELETE_TASK",
-        payload: { taskId: id, activiteId },
-      });
-    } catch (error) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: "Failed to delete task. Please try again.",
-      });
-    }
-  };
-
-  const assignTask = async (taskId: number, userId: number) => {
-    try {
-      const updatedTask = await taskService.assignTask(taskId, userId);
-      dispatch({ type: "UPDATE_USER_ASSIGNMENT", payload: { taskId, userId } });
-      dispatch({ type: "UPDATE_TASK", payload: updatedTask });
-    } catch (error) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: "Failed to assign task. Please try again.",
+        payload: "Failed to fetch project tasks",
       });
     }
   };
@@ -298,13 +241,47 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const value = {
     state,
     fetchTasks,
-    fetchAllTasks,
     createTask,
     updateTask,
-    deleteTask,
+    deleteTask: async (id: number, activiteId: number) => {
+      try {
+        await taskService.deleteTask(id);
+        dispatch({
+          type: "DELETE_TASK",
+          payload: { taskId: id, activiteId },
+        });
+        toast.success("Tâche supprimée avec succès");
+      } catch (error) {
+        toast.error("Échec de la suppression de la tâche");
+        throw error;
+      }
+    },
     assignTask,
-    fetchAvailableTasks,
-    fetchProjectTasks, // Add this line
+    fetchAvailableTasks: async () => {
+      dispatch({ type: "SET_LOADING" });
+      try {
+        const tasks = await taskService.getAvailableTasks();
+        dispatch({ type: "SET_AVAILABLE_TASKS", payload: tasks });
+      } catch (error) {
+        dispatch({
+          type: "SET_ERROR",
+          payload: "Failed to fetch available tasks",
+        });
+      }
+    },
+    fetchAllTasks: async () => {
+      dispatch({ type: "SET_LOADING" });
+      try {
+        const tasks = await taskService.getAllTasks();
+        dispatch({ type: "SET_ALL_TASKS", payload: tasks });
+      } catch (error) {
+        dispatch({
+          type: "SET_ERROR",
+          payload: "Failed to fetch all tasks",
+        });
+      }
+    },
+    fetchProjectTasks,
   };
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;

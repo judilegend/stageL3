@@ -20,6 +20,8 @@ import {
 import { useUsers } from "@/contexts/UserContext";
 import { useTasks } from "@/contexts/TaskContext";
 import { userService } from "@/services/userService";
+import { toast } from "react-hot-toast";
+import Cookies from "js-cookie";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -40,13 +42,45 @@ export function TaskModal({
   } = useUsers();
   const { createTask, updateTask } = useTasks();
 
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    assignedUserId: "",
+    importance: "not-important",
+    urgency: "not-urgent",
+    estimatedPomodoros: 1,
+  });
+
+  useEffect(() => {
+    if (task) {
+      setFormData({
+        title: task.title || "",
+        description: task.description || "",
+        assignedUserId: task.assignedUserId?.toString() || "",
+        importance: task.importance || "not-important",
+        urgency: task.urgency || "not-urgent",
+        estimatedPomodoros: task.estimatedPomodoros || 1,
+      });
+    } else {
+      // Reset form when creating new task
+      setFormData({
+        title: "",
+        description: "",
+        assignedUserId: "",
+        importance: "not-important",
+        urgency: "not-urgent",
+        estimatedPomodoros: 1,
+      });
+    }
+  }, [task, isOpen]);
+
   useEffect(() => {
     const loadUsers = async () => {
       try {
         const fetchedUsers = await userService.getAllUsers();
         dispatch({ type: "SET_USERS", payload: fetchedUsers });
       } catch (error) {
-        console.error("Failed to fetch users:", error);
+        toast.error("Erreur lors du chargement des utilisateurs");
       }
     };
 
@@ -54,15 +88,6 @@ export function TaskModal({
       loadUsers();
     }
   }, [isOpen, dispatch]);
-
-  const [formData, setFormData] = useState({
-    title: task?.title || "",
-    description: task?.description || "",
-    assignedUserId: task?.assignedUserId?.toString() || "",
-    importance: task?.importance || "not-important",
-    urgency: task?.urgency || "not-urgent",
-    estimatedPomodoros: task?.estimatedPomodoros || 1,
-  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,24 +98,52 @@ export function TaskModal({
           formData.assignedUserId === "0"
             ? null
             : parseInt(formData.assignedUserId),
+        activiteId,
+        status: "todo",
+        completedPomodoros: 0,
       };
 
       if (task) {
         await updateTask(task.id, taskData);
+        if (taskData.assignedUserId) {
+          // Send notification for task assignment
+          await fetch(`http://localhost:5000/api/notifications/task-assigned`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Cookies.get("token")}`,
+            },
+            body: JSON.stringify({
+              userId: taskData.assignedUserId,
+              taskTitle: taskData.title,
+            }),
+          });
+        }
+        toast.success("Tâche mise à jour avec succès");
       } else {
-        await createTask({
-          ...taskData,
-          activiteId,
-          status: "todo",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          completedPomodoros: 0,
-          sprintId: null,
-        });
+        const newTask = await createTask(taskData);
+        if (taskData.assignedUserId) {
+          // Send notification for new task assignment
+          await fetch(`http://localhost:5000/api/notifications/task-assigned`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Cookies.get("token")}`,
+            },
+            body: JSON.stringify({
+              userId: taskData.assignedUserId,
+              taskTitle: taskData.title,
+            }),
+          });
+        }
+        toast.success("Tâche créée avec succès");
       }
+
       onClose();
     } catch (error) {
-      console.error("Error saving task:", error);
+      toast.error("Erreur lors de la sauvegarde de la tâche");
     }
   };
 

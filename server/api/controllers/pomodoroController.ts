@@ -7,9 +7,10 @@ export const startPomodoro = async (req: Request, res: Response) => {
     const pomodoro = await pomodoroService.startPomodoro(parseInt(tacheId));
     res.json(pomodoro);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error starting Pomodoro", error: error.message });
+    res.status(400).json({
+      message: "Error starting Pomodoro",
+      error: "An unknown error occurred",
+    });
   }
 };
 
@@ -21,9 +22,10 @@ export const completePomodoro = async (req: Request, res: Response) => {
     );
     res.json(pomodoro);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error completing Pomodoro", error: error.message });
+    res.status(400).json({
+      message: "Error completing Pomodoro",
+      error: "An unknown error occurred",
+    });
   }
 };
 
@@ -35,9 +37,10 @@ export const getPomodorosForTache = async (req: Request, res: Response) => {
     );
     res.json(pomodoros);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error fetching Pomodoros", error: error.message });
+    res.status(400).json({
+      message: "Error fetching Pomodoros",
+      error: "An unknown error occurred",
+    });
   }
 };
 
@@ -51,7 +54,7 @@ export const getCurrentPomodoro = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(400).json({
       message: "Error fetching current Pomodoro",
-      error: error.message,
+      error: "An unknown error occurred",
     });
   }
 };

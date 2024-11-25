@@ -83,6 +83,12 @@ export const setupSocketServer = (io: Server) => {
       }
     );
 
+    // Add notification acknowledgment handler
+    socket.on("notification_read", async (notificationId: string) => {
+      // Handle notification read status
+      console.log(`Notification ${notificationId} read by user ${userId}`);
+    });
+
     socket.on("disconnect", () => {
       console.log(`User ${userId} disconnected`);
     });

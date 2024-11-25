@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+"use client";
 import localFont from "next/font/local";
 import "./globals.css";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -12,6 +12,9 @@ import { ActivityProvider } from "@/contexts/ActivityContext";
 import { CurrentProjectProvider } from "@/contexts/CurrentProjectContext";
 import { SprintProvider } from "@/contexts/SprintContext";
 import { Toaster } from "react-hot-toast";
+import { PWATestFeatures } from "@/components/pwa/PWATestFeatures";
+import { registerServiceWorker } from "@/utils/serviceWorkerRegistration";
+import { useEffect } from "react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,15 +28,15 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const metadata: Metadata = {
-  title: "DepannPC - Plateforme de Gestion",
-  description: "Plateforme de gestion pour l'équipe DepannPC",
-};
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   return (
     <html lang="fr">
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
@@ -47,6 +50,7 @@ export default function RootLayout({
                     <TaskProvider>
                       <Toaster position="top-right" />
                       {children}
+                      <PWATestFeatures />
                     </TaskProvider>
                   </ActivityProvider>
                 </WorkPackageProvider>

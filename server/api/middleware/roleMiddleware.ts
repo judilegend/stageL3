@@ -26,6 +26,7 @@ export const authorizeWorkPackageManagement = (
   const allowedRoles = [
     "admin",
     "product_owner",
+    "scrum_master",
     "lead_developer",
     "tech_lead",
   ];

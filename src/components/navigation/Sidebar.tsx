@@ -37,8 +37,8 @@ export function AppSidebar({ className }: SidebarProps) {
   const [isLoading, setIsLoading] = useState(false);
   const userInitial = user?.username ? user.username[0].toUpperCase() : "U";
   const { canCreateProject } = useProjectGuards();
-  console.log("Sidebar user:", user); // Debug log
-  console.log("Can create project:", canCreateProject()); // Debug log
+  // console.log("Sidebar user:", user); // Debug log
+  // console.log("Can create project:", canCreateProject()); // Debug log
 
   const menuItems = [
     {

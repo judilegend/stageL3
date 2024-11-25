@@ -8,6 +8,7 @@ import { TaskModal } from "./TaskModal";
 import { Task } from "@/types/task";
 import { useTaskGuards } from "@/middleware/guards/projectGuards";
 import { useAuth } from "@/contexts/AuthContext";
+import Cookies from "js-cookie";
 
 interface TaskListProps {
   activiteId: number;
@@ -30,6 +31,68 @@ export function TaskList({ activiteId }: TaskListProps) {
   useEffect(() => {
     fetchTasks(activiteId);
   }, [activiteId]);
+
+  // Add this utility function at the top of the file
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+      .replace(/\-/g, "+")
+      .replace(/_/g, "/");
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+  const requestNotificationPermission = async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        const registration = await navigator.serviceWorker.ready;
+        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_KEY;
+        const token = Cookies.get("token");
+
+        if (!vapidPublicKey) {
+          console.error("VAPID public key not found");
+          return;
+        }
+
+        const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedVapidKey,
+        });
+
+        const response = await fetch(
+          `http://localhost:5000/api/notifications/subscribe`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            credentials: "include",
+            body: JSON.stringify(subscription),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Subscription failed");
+        }
+      }
+    } catch (error) {
+      console.error("Notification permission error:", error);
+    }
+  };
+
+  //effecter notification
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
 
   const activityTasks = tasksByActivity[activiteId] || [];
 

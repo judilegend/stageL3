@@ -7,9 +7,10 @@ export const createTache = async (req: Request, res: Response) => {
     const tache = await tacheService.createTache(req.body);
     res.status(201).json(tache);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error creating tache", error: error.message });
+    res.status(400).json({
+      message: "Error creating tache",
+      error: "an unknown error occurred",
+    });
   }
 };
 // Ajouter ce nouveau contrôleur
@@ -22,7 +23,7 @@ export const getTachesByProjectId = async (req: Request, res: Response) => {
     console.error("Project tasks fetch error:", error);
     res.status(500).json({
       message: "Error fetching project tasks",
-      error: error.message,
+      error: "an unknown error occurred",
     });
   }
 };
@@ -33,9 +34,10 @@ export const getTachesBySprintId = async (req: Request, res: Response) => {
     const taches = await tacheService.getTachesBySprintId(parseInt(sprintId));
     res.json(taches);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error fetching taches", error: error.message });
+    res.status(400).json({
+      message: "Error fetching taches",
+      error: "an unknown error occurred",
+    });
   }
 };
 // Add these new controller methods
@@ -48,9 +50,10 @@ export const createTacheForActivite = async (req: Request, res: Response) => {
     );
     res.status(201).json(tache);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error creating tache", error: error.message });
+    res.status(400).json({
+      message: "Error creating tache",
+      error: "an unknown error occurred",
+    });
   }
 };
 
@@ -64,9 +67,10 @@ export const assignTache = async (req: Request, res: Response) => {
     );
     res.json(tache);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error assigning tache", error: error.message });
+    res.status(400).json({
+      message: "Error assigning tache",
+      error: "an unknown error occurred",
+    });
   }
 };
 
@@ -81,7 +85,7 @@ export const updateTacheStatus = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(400).json({
       message: "Error updating task status",
-      error: error.message,
+      error: "an unknown error occurred",
     });
   }
 };
@@ -92,9 +96,10 @@ export const getTachesByActiviteId = async (req: Request, res: Response) => {
     );
     res.json(taches);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error fetching taches", error: error.message });
+    res.status(400).json({
+      message: "Error fetching taches",
+      error: "an unknown error occurred",
+    });
   }
 };
 export const getTasksByCategory = async (req: Request, res: Response) => {
@@ -104,7 +109,7 @@ export const getTasksByCategory = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(400).json({
       message: "Error fetching categorized tasks",
-      error: error.message,
+      error: "an unknown error occurred",
     });
   }
 };
@@ -115,7 +120,7 @@ export const getAvailableTasks = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(400).json({
       message: "Error fetching available tasks",
-      error: error.message,
+      error: "an unknown error occurred",
     });
   }
 };
@@ -128,9 +133,10 @@ export const updateTache = async (req: Request, res: Response) => {
     );
     res.json(tache);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error updating tache", error: error.message });
+    res.status(400).json({
+      message: "Error updating tache",
+      error: "an unknown error occurred",
+    });
   }
 };
 
@@ -139,9 +145,10 @@ export const deleteTache = async (req: Request, res: Response) => {
     await tacheService.deleteTache(parseInt(req.params.id));
     res.json({ message: "Tache deleted successfully" });
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error deleting tache", error: error.message });
+    res.status(400).json({
+      message: "Error deleting tache",
+      error: "an unknown error occurred",
+    });
   }
 };
 export const categorizeTask = async (req: Request, res: Response) => {
@@ -155,9 +162,10 @@ export const categorizeTask = async (req: Request, res: Response) => {
     );
     res.json(task);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error categorizing task", error: error.message });
+    res.status(400).json({
+      message: "Error categorizing task",
+      error: "an unknown error occurred",
+    });
   }
 };
 
@@ -168,7 +176,7 @@ export const getTasksByQuadrant = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(400).json({
       message: "Error fetching tasks by quadrant",
-      error: error.message,
+      error: "an unknown error occurred",
     });
   }
 };
@@ -179,7 +187,7 @@ export const getAllTaches = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(400).json({
       message: "Error fetching all tasks",
-      error: error.message,
+      error: "an unknown error occurred",
     });
   }
 };

@@ -22,10 +22,10 @@ export const getTasksByQuadrant = async () => {
     "not-urgent-not-important": [],
   };
 
-  tasks.forEach((task) => {
-    const key = `${task.urgency}-${task.importance}`;
-    quadrants[key].push(task);
-  });
+  // tasks.forEach((task) => {
+  //   const key = `${task.urgency}-${task.importance}`;
+  //   quadrants[key].push(task);
+  // });
 
   return quadrants;
 };

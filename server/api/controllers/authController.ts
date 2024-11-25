@@ -23,7 +23,7 @@ export const register = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(400).json({
       message: "Registration failed",
-      error: error.message,
+      error: "An unknown error occurred",
     });
   }
 };
@@ -40,7 +40,7 @@ export const login = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(401).json({
       message: "Login failed",
-      error: error.message,
+      error: "An unknown error occurred",
     });
   }
 };
