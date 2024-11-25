@@ -61,8 +61,61 @@ export const updateTacheStatus = async (tacheId: number, status: string) => {
     throw new Error("Invalid status provided");
   }
 
-  const tache = await Tache.findByPk(tacheId);
+  const tache = await Tache.findByPk(tacheId, {
+    include: [
+      {
+        model: User,
+        as: "assignedUser",
+      },
+    ],
+  });
+
   if (!tache) throw new Error("Task not found");
+
+  // When task is marked as "review"
+  if (status === "review") {
+    // Notify Scrum Master, Lead Dev, and Tech Lead
+    const leadRoles = await User.findAll({
+      where: {
+        role: {
+          [Op.in]: ["SCRUM_MASTER", "LEAD_DEV", "TECH_LEAD"],
+        },
+      },
+    });
+
+    // Send notifications to all leads
+    for (const lead of leadRoles) {
+      await notificationService.notifyTaskAssignment(lead.id, {
+        id: tacheId,
+        title: `Review Required: ${tache.title}`,
+        type: "TASK_REVIEW",
+        data: {
+          taskId: tacheId,
+          developerId: tache.assignedUserId,
+          status: "review",
+        },
+      });
+    }
+  }
+
+  // When task is marked as "done" or returned to "todo"
+  if (status === "done" || status === "todo") {
+    // Notify the assigned developer
+    if (tache.assignedUserId) {
+      await notificationService.notifyTaskAssignment(tache.assignedUserId, {
+        id: tacheId,
+        title:
+          status === "done"
+            ? `Task Approved: ${tache.title}`
+            : `Task Needs Revision: ${tache.title}`,
+        type: status === "done" ? "TASK_APPROVED" : "TASK_REVISION",
+        data: {
+          taskId: tacheId,
+          status: status,
+        },
+      });
+    }
+  }
 
   return await tache.update({ status });
 };

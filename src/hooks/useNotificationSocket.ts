@@ -1,7 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "@/contexts/AuthContext";
 import Cookies from "js-cookie";
+
+interface NotificationSound {
+  key: string;
+  audio: HTMLAudioElement;
+}
 
 interface Notification {
   id: string;
@@ -20,62 +25,81 @@ export const useNotificationSocket = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user } = useAuth();
+  const socketRef = useRef<Socket>();
+  const soundsRef = useRef<Map<string, NotificationSound>>(new Map());
 
-  useEffect(() => {
-    if (!user) return;
-
-    const token = Cookies.get("token");
-    if (!token) return;
-
-    const socket = io(
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000",
+  // Initialisation des sons
+  const initializeSounds = useCallback(() => {
+    const sounds = [
       {
-        auth: { token },
-        withCredentials: true,
-      }
-    );
+        key: "TASK_APPROVED",
+        path: "/sounds/success.wav",
+        volume: 1.0, // Maximum volume
+      },
+      {
+        key: "TASK_REVIEW",
+        path: "/sounds/review.wav",
+        volume: 1.0, // Maximum volume
+      },
+      {
+        key: "default",
+        path: "/sounds/notification.wav",
+        volume: 1.0, // Maximum volume
+      },
+    ];
 
-    socket.on("connect", () => {
-      console.log("Connected to notification socket");
-      // Fetch initial notifications
-      fetchNotifications();
+    sounds.forEach(({ key, path, volume }) => {
+      const audio = new Audio(path);
+      audio.volume = volume;
+      audio.preload = "auto";
+      audio.muted = false; // Ensure audio is not muted
+      soundsRef.current.set(key, { key, audio });
     });
+  }, []);
 
-    socket.on(
-      "taskAssigned",
-      (data: { notification: Notification; unreadCount: number }) => {
-        // Play notification sound
-        const audio = new Audio("./patien.mp3");
-        audio.play().catch((e) => console.log("Audio play failed:", e));
-
-        // Update notifications state
-        setNotifications((prev) => [data.notification, ...prev]);
-        setUnreadCount(data.unreadCount);
-
-        // Show browser notification
-        if (Notification.permission === "granted") {
-          new Notification(data.notification.title, {
-            body: data.notification.body,
-            icon: "/icons/icon-192x192.png",
-            data: data.notification.data,
-          });
-        }
+  const playNotificationSound = useCallback((type: string = "default") => {
+    const sound =
+      soundsRef.current.get(type) || soundsRef.current.get("default");
+    if (sound) {
+      sound.audio.currentTime = 0;
+      sound.audio.volume = 1.0; // Ensure maximum volume when playing
+      // Force play with user interaction
+      const playPromise = sound.audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.log("Sound playback failed:", error);
+        });
       }
-    );
+    }
+  }, []);
 
-    socket.on("notificationRead", ({ notificationId, unreadCount }) => {
-      setNotifications((prev) =>
-        prev.map((notif) =>
-          notif.id === notificationId ? { ...notif, read: true } : notif
-        )
-      );
-      setUnreadCount(unreadCount);
-    });
+  const handleNotification = useCallback(
+    (data: { notification: Notification; unreadCount: number }) => {
+      const { notification, unreadCount: newUnreadCount } = data;
 
-    return () => {
-      socket.disconnect();
-    };
-  }, [user]);
+      setNotifications((prev) => [notification, ...prev]);
+      setUnreadCount(newUnreadCount);
+
+      playNotificationSound(notification.data?.type);
+
+      if (Notification.permission === "granted") {
+        const browserNotification = new Notification(notification.title, {
+          body: notification.body,
+          icon: "/icons/icon-192x192.png",
+          tag: `task-${notification.data?.taskId}`,
+          silent: true, // Désactiver le son par défaut du navigateur
+        });
+
+        browserNotification.onclick = () => {
+          window.focus();
+          if (notification.data?.url) {
+            window.location.href = notification.data.url;
+          }
+        };
+      }
+    },
+    [playNotificationSound]
+  );
 
   const fetchNotifications = async () => {
     try {
@@ -87,9 +111,8 @@ export const useNotificationSocket = () => {
         },
       });
 
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const data = await response.json();
       setNotifications(data);
@@ -106,6 +129,10 @@ export const useNotificationSocket = () => {
         {
           method: "PUT",
           credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Cookies.get("token")}`,
+          },
         }
       );
 
@@ -119,6 +146,35 @@ export const useNotificationSocket = () => {
       console.error("Failed to mark notification as read:", error);
     }
   };
+
+  useEffect(() => {
+    if (!user) return;
+
+    initializeSounds();
+    const token = Cookies.get("token");
+    if (!token) return;
+
+    socketRef.current = io(
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000",
+      {
+        auth: { token },
+        withCredentials: true,
+      }
+    );
+
+    socketRef.current.on("connect", () => {
+      console.log("Connected to notification socket");
+      fetchNotifications();
+    });
+
+    socketRef.current.on("taskAssigned", handleNotification);
+    socketRef.current.on("taskStatusChanged", handleNotification);
+
+    return () => {
+      soundsRef.current.clear();
+      socketRef.current?.disconnect();
+    };
+  }, [user, handleNotification, initializeSounds]);
 
   return { notifications, unreadCount, markAsRead };
 };

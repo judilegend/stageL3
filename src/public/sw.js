@@ -43,7 +43,6 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
-
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   if (event.action === "open" && event.notification.data?.url) {
