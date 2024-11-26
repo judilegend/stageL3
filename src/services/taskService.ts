@@ -61,13 +61,27 @@ export const taskService = {
     if (!response.ok) throw new Error("Failed to delete task");
   },
 
+  // async assignTask(taskId: number, userId: number): Promise<Task> {
+  //   const response = await fetch(`${API_URL}/tasks/${taskId}/assign`, {
+  //     method: "PUT",
+  //     headers: defaultHeaders,
+  //     credentials: "include",
+  //     body: JSON.stringify({ userId }),
+  //   });
+  //   if (!response.ok) throw new Error("Failed to assign task");
+  //   return response.json();
+  // },
   async assignTask(taskId: number, userId: number): Promise<Task> {
     const response = await fetch(`${API_URL}/tasks/${taskId}/assign`, {
       method: "PUT",
-      headers: defaultHeaders,
+      headers: {
+        ...defaultHeaders,
+        "Push-Notification": "true", // Header personnalisé pour indiquer l'envoi de notification
+      },
       credentials: "include",
       body: JSON.stringify({ userId }),
     });
+
     if (!response.ok) throw new Error("Failed to assign task");
     return response.json();
   },

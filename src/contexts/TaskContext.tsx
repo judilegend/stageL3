@@ -197,6 +197,19 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // const assignTask = async (taskId: number, userId: number): Promise<void> => {
+  //   try {
+  //     const updatedTask = await taskService.assignTask(taskId, userId);
+  //     dispatch({
+  //       type: "UPDATE_USER_ASSIGNMENT",
+  //       payload: { taskId, userId },
+  //     });
+  //     toast.success("Tâche assignée avec succès");
+  //   } catch (error) {
+  //     toast.error("Échec de l'assignation de la tâche");
+  //     throw error;
+  //   }
+  // };
   const assignTask = async (taskId: number, userId: number): Promise<void> => {
     try {
       const updatedTask = await taskService.assignTask(taskId, userId);
@@ -204,6 +217,33 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         type: "UPDATE_USER_ASSIGNMENT",
         payload: { taskId, userId },
       });
+
+      // Vérification des permissions et envoi de la notification
+      if ("Notification" in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted" && "serviceWorker" in navigator) {
+          const registration = await navigator.serviceWorker.ready;
+          const payload = {
+            title: "Nouvelle tâche assignée",
+            body: `La tâche "${updatedTask.title}" vous a été assignée`,
+            data: {
+              taskId: updatedTask.id,
+              url: `/projets/${updatedTask.projectId}/taches`,
+            },
+          };
+          await registration.showNotification(payload.title, {
+            body: payload.body,
+            icon: "/icons/icon-192x192.png",
+            badge: "/icons/badge-icon.png",
+            data: payload.data,
+            requireInteraction: true,
+            actions: [
+              { action: "open", title: "Voir la tâche" },
+              { action: "close", title: "Fermer" },
+            ],
+          });
+        }
+      }
       toast.success("Tâche assignée avec succès");
     } catch (error) {
       toast.error("Échec de l'assignation de la tâche");
