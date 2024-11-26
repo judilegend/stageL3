@@ -6,10 +6,11 @@ interface PageProps {
   params: {
     projectId: string;
   };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
-
-export default async function KanbanPage({ params }: PageProps) {
-  const projectId = params.projectId;
+export default async function KanbanPage({ params, searchParams }: PageProps) {
+  const resolvedParams = await params;
+  const projectId = resolvedParams.projectId;
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
@@ -26,8 +27,10 @@ export default async function KanbanPage({ params }: PageProps) {
 
 // Metadata for the page
 export async function generateMetadata({ params }: PageProps) {
+  const resolvedParams = await params;
+
   return {
-    title: `Kanban - Projet ${params.projectId}`,
+    title: `Kanban - Projet ${resolvedParams.projectId}`,
     description: "Tableau Kanban du projet",
   };
 }

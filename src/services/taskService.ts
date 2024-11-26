@@ -20,7 +20,7 @@ export const taskService = {
 
   async getTasks(activiteId: number): Promise<Task[]> {
     const response = await fetch(`${API_URL}/tasks/activity/${activiteId}`, {
-      credentials: "include",
+      next: { revalidate: 60 }, // Cache for 60 seconds
       headers: defaultHeaders,
     });
     if (!response.ok) throw new Error("Failed to fetch tasks");
