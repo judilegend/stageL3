@@ -76,10 +76,13 @@ export const taskService = {
       method: "PUT",
       headers: {
         ...defaultHeaders,
-        "Push-Notification": "true", // Header personnalisé pour indiquer l'envoi de notification
+        "Push-Enabled": "true",
       },
       credentials: "include",
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({
+        userId,
+        subscription: await this.getSubscription(),
+      }),
     });
 
     if (!response.ok) throw new Error("Failed to assign task");
@@ -141,5 +144,12 @@ export const taskService = {
     });
     if (!response.ok) throw new Error("Failed to fetch all tasks");
     return response.json();
+  },
+  async getSubscription(): Promise<PushSubscription | null> {
+    if ("serviceWorker" in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      return registration.pushManager.getSubscription();
+    }
+    return null;
   },
 };
