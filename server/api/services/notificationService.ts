@@ -60,16 +60,33 @@ class NotificationService {
   }
   async notifyTaskAssignment(userId: number, task: any) {
     try {
-      console.log("Starting notification process for user:", userId); // Debug log
+      // Create notification title and body based on type
+      let title, body;
+      switch (task.type) {
+        case "TASK_REVIEW":
+          title = "Nouvelle tâche à réviser";
+          body = `Le développeur a terminé la tâche: ${task.title}. Révision requise.`;
+          break;
+        case "TASK_APPROVED":
+          title = "Tâche approuvée";
+          body = `Votre tâche "${task.title}" a été validée!`;
+          break;
+        case "TASK_REVISION":
+          title = "Révision requise";
+          body = `La tâche "${task.title}" nécessite des modifications.`;
+          break;
+        default:
+          title = "Nouvelle tâche assignée";
+          body = `Vous avez été assigné à la tâche: ${task.title}`;
+      }
 
-      // Create notification payload
       const payload = {
         id: Date.now().toString(),
-        title: "Nouvelle tâche assignée",
-        body: `Vous avez été assigné à la tâche: ${task.title}`,
+        title,
+        body,
         data: {
-          type: "TASK_ASSIGNMENT",
-          taskId: task.id,
+          ...task.data,
+          type: task.type,
           url: `/tasks/${task.id}`,
         },
         icon: "/icons/icon-192x192.png",
@@ -86,14 +103,10 @@ class NotificationService {
         read: false,
       });
 
-      console.log("Notification saved to database:", notification); // Debug log
-
       // Get user's push subscriptions
       const subscriptions = await Subscription.findAll({
         where: { userId },
       });
-
-      console.log(`Found ${subscriptions.length} subscriptions for user`); // Debug log
 
       // Send push notifications
       const pushPromises = subscriptions.map(async (sub) => {
@@ -110,7 +123,6 @@ class NotificationService {
             pushSubscription,
             JSON.stringify(payload)
           );
-          console.log("Push notification sent successfully"); // Debug log
         } catch (error) {
           console.error("Push notification failed:", error);
         }
@@ -121,13 +133,12 @@ class NotificationService {
       // Get updated unread count
       const unreadCount = await this.getUnreadNotificationsCount(userId);
 
-      // Emit socket event with notification and count
+      // Emit socket event
       if (this.io) {
         this.io.to(`user:${userId}`).emit("taskAssigned", {
           notification,
           unreadCount,
         });
-        console.log("Socket event emitted"); // Debug log
       }
 
       return { notification, unreadCount };

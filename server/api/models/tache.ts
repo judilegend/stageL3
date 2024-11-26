@@ -9,7 +9,7 @@ class Tache extends Model {
   public sprintId!: number | null;
   public title!: string;
   public description!: string;
-  public status!: "todo" | "in_progress" | "done";
+  public status!: "todo" | "in_progress" | "review" | "done";
   public activiteId!: number;
   public assignedUserId!: number | null;
   public estimatedPomodoros!: number;
